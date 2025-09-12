@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'login_signup',
     'profile_panel',
     'rest_framework_simplejwt',
-
+    'chat'
 ]
 
 MIDDLEWARE = [

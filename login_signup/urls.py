@@ -13,10 +13,9 @@ router.register(r'users', UserViewSet, basename='user')
 
 urlpatterns = [
     path('', include(router.urls)),
-    # Custom authentication endpoints
-    path('auth/register/', register, name='register'),
-    path('auth/login/', login, name='login'),
-    path('auth/delete/', delete_account, name='delete_account'),
-    path('auth/logout/', logout, name='logout'),
+    path('register/', register, name='register'),
+    path('login/', login, name='login'),
+    path('delete/', delete_account, name='delete_account'),
+    path('logout/', logout, name='logout'),
 ]
 
