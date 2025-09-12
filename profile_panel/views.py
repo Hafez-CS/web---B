@@ -46,6 +46,6 @@ def upload_file(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_files(request):
-    file = UploadedFile.objects.get(user=request.user)
-    serializer = UploadedFileSerializer(file , many=True)
+    files = UploadedFile.objects.filter(user=request.user)
+    serializer = UploadedFileSerializer(files, many=True)
     return Response(serializer.data)

@@ -1,7 +1,7 @@
 from django.shortcuts import render
 
 # Create your views here.
-from django.contrib.auth.models import User
+from login_signup.models import User
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import authenticate
 from rest_framework import viewsets, status
