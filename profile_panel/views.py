@@ -3,18 +3,19 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view , permission_classes , parser_classes
 from rest_framework.parsers import FileUploadParser , MultiPartParser
 from rest_framework.permissions import IsAuthenticated
-from .models import Profile , UploadedFile
-from .serializers import ProfileSerializer , UploadedFileSerializer
+from login_signup.models import User
+from .models import UploadedFile
+from .serializers import UserSerializer , UploadedFileSerializer
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_profile(request):
     try:
-        profile = Profile.objects.get(user=request.user)
-    except Profile.DoesNotExist:
-        return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
-    serializer = ProfileSerializer(profile)
+        user = User.objects.get(id=request.user.id)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    serializer = UserSerializer(user)
     return Response(serializer.data)
 
 
@@ -22,10 +23,10 @@ def get_profile(request):
 @permission_classes([IsAuthenticated])
 def update_profile(request):
     try:
-        profile = Profile.objects.get(user=request.user)
-    except Profile.DoesNotExist:
-        return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
-    serializer = ProfileSerializer(profile, data=request.data, partial=True)
+        user = User.objects.get(id=request.user.id)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    serializer = UserSerializer(user, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)

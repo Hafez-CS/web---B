@@ -1,14 +1,16 @@
 from rest_framework import serializers
-from .models import Profile , UploadedFile
+from login_signup.models import User
+from .models import UploadedFile
 
 
-class ProfileSerializer(serializers.ModelSerializer):
+
+class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='user.email')
     username = serializers.CharField(source='user.username' , read_only=True)
 
     class Meta:
-        model = Profile
-        fields = ['email' , 'full_name' , 'username' , 'profile_picture']
+        model = User
+        fields = ['email' , 'first_name' ,'last_name' , 'username' , 'profile_pic_path']
 
 
     def update(self, instance, validated_data):
