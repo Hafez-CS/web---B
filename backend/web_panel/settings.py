@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'login_signup',
     'profile_panel',
     'rest_framework_simplejwt',
-    'chat'
+    'chat',
+    'channels'
 ]
 
 MIDDLEWARE = [
@@ -145,3 +146,5 @@ SIMPLE_JWT = {
 }
 
 AUTH_USER_MODEL = 'login_signup.User'
+
+ASGI_APPLICATION = "web_panel.asgi.application"
