@@ -2,5 +2,6 @@ djangorestframework
 markdown
 django-filter
 djangorestframework-simplejwt
-
-
+mssql-django
+pyodbc
+Pillow
