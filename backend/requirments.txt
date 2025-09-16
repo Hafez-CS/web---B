@@ -1,7 +1,12 @@
 djangorestframework
-markdown
 django-filter
 djangorestframework-simplejwt
+markdown
+drf-yasg
+coreapi
+django-cors-headers
+drf-nested-routers
+django-rest-swagger
 mssql-django
 pyodbc
 Pillow
