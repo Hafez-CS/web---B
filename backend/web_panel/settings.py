@@ -148,3 +148,6 @@ SIMPLE_JWT = {
 AUTH_USER_MODEL = 'login_signup.User'
 
 ASGI_APPLICATION = "web_panel.asgi.application"
+
+import os 
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
