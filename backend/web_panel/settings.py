@@ -81,8 +81,16 @@ WSGI_APPLICATION = 'web_panel.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'mssql',
+        'NAME': 'mydb',
+        'USER': '',         # یوزر دیتابیس
+        'PASSWORD': '',
+        'HOST': 'localhost',      # یا IP سرور SQL
+        'PORT': '',
+        'OPTIONS': {
+            'driver': 'ODBC Driver 17 for SQL Server',  
+            # مطمئن شو این درایور روی سیستم نصبه
+        },
     }
 }
 
