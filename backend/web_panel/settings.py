@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'profile_panel',
     'rest_framework_simplejwt',
     'chat',
-    'channels'
 ]
 
 MIDDLEWARE = [
@@ -159,3 +158,12 @@ ASGI_APPLICATION = "web_panel.asgi.application"
 
 import os 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}

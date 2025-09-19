@@ -20,6 +20,7 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from chat_app import views
 
 urlpatterns = [
 
@@ -29,5 +30,7 @@ urlpatterns = [
     path('api/chat/', include('chat.urls')),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('chat/', views.chat_room, name='chat_room'),
+    path('chat/<int:room_id>/', views.chat_room, name='chat_room'),
 
 ]
