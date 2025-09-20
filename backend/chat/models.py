@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from login_signup.models import User
 
 class ChatRoom(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -7,7 +7,7 @@ class ChatRoom(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Message(models.Model):
-    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE)
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE , null=True)
     user_message = models.TextField()
     ai_response = models.TextField(null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)

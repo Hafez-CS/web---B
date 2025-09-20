@@ -48,3 +48,14 @@ typing_extensions==4.15.0
 tzdata==2025.2
 uritemplate==4.2.0
 urllib3==2.5.0
+django-filter
+djangorestframework-simplejwt
+markdown
+drf-yasg
+coreapi
+django-cors-headers
+drf-nested-routers
+django-rest-swagger
+mssql-django
+pyodbc
+Pillow

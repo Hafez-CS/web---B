@@ -117,6 +117,10 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
 
     'DEFAULT_PARSER_CLASSES':[
         'rest_framework.parsers.JSONParser',
@@ -124,6 +128,8 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.FileUploadParser',
     ]
 }
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = False
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -156,8 +162,6 @@ AUTH_USER_MODEL = 'login_signup.User'
 
 ASGI_APPLICATION = "web_panel.asgi.application"
 
-import os 
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 CHANNEL_LAYERS = {
     'default': {

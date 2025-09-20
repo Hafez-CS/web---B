@@ -20,7 +20,7 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from chat_app import views
+from chat import views
 
 urlpatterns = [
 
