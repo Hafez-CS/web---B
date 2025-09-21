@@ -171,3 +171,6 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+DEEPSEEK_API_KEY = "sk-4eaa72efedb24c3dbbcd48abc5320625"
+

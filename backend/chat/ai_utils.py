@@ -1,13 +1,16 @@
-import openai
+from openai import OpenAI
 from django.conf import settings
 
-open.api_key = settings.OPENAI_API_KEY
+client = OpenAI(
+    api_key=settings.DEEPSEEK_API_KEY,  # کلید Deepseek را در settings.py قرار دهید
+    base_url="https://api.deepseek.com/v1"
+)
 
 def ask_ai(prompt: str) -> str:
     try:
-        response = openai.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user" , "content": prompt}],
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[{"role": "user", "content": prompt}],
             max_tokens=800,
         )
         return response.choices[0].message.content

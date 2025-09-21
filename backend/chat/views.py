@@ -12,18 +12,18 @@ import os
 # تنظیمات OpenAI client
 try:
     client = OpenAI(
-        api_key=os.getenv('DEEPSEEK_API_KEY', 'sk-7f1b2ace00344041984102367b48983c'),
-        base_url="https://api.deepseek.com/v1"  # تغییر نسخه API به v1
-    )
+        api_key=os.getenv('DEEPSEEK_API_KEY', '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'),
+        base_url="https://openrouter.ai" )
 except Exception as e:
     print(f"Error initializing OpenAI client: {e}")
     client = None
 
 @csrf_exempt
 @api_view(['GET', 'POST'])
-@login_required
 def chat_room(request, room_id=None):
-    # First, verify the room exists and belongs to the user
+    if not request.user.is_authenticated:
+        return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+    
     try:
         room = ChatRoom.objects.get(id=room_id, user=request.user)
     except ChatRoom.DoesNotExist:
@@ -35,7 +35,6 @@ def chat_room(request, room_id=None):
         return Response(serializer.data)
     
     elif request.method == 'POST':
-        # Create a new message
         try:
             user_message = request.data.get('user_message')
             if not user_message:
@@ -50,6 +49,7 @@ def chat_room(request, room_id=None):
             # Create and save the message
             message = Message.objects.create(
                 room=room,
+                user=request.user,  # اضافه کردن کاربر به پیام
                 user_message=user_message,
                 ai_response=ai_response
             )
@@ -70,13 +70,15 @@ def get_ai_response(user_message, history):
         messages.append({"role": "user", "content": user_message})
         
         response = client.chat.completions.create(
-            model="deepseek-chat",  # یا از مدل‌های دیگر استفاده کنید
+            model="deepseek-chat",
             messages=messages,
             temperature=0.7,
             max_tokens=2000,
             top_p=0.9,
             frequency_penalty=0.0,
-            presence_penalty=0.0
+            presence_penalty=0.0,
+            stream=False,
+            stop=None
         )
         
         if hasattr(response, 'choices') and len(response.choices) > 0 and hasattr(response.choices[0], 'message'):
@@ -92,9 +94,10 @@ def get_ai_response(user_message, history):
 
 @csrf_exempt
 @api_view(['POST'])
-@login_required
 def create_room(request):
-    """Create a new chat room"""
+    if not request.user.is_authenticated:
+        return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
     serializer = ChatRoomSerializer(data=request.data)
     if serializer.is_valid():
         room = serializer.save(user=request.user)
@@ -103,18 +106,20 @@ def create_room(request):
 
 @csrf_exempt
 @api_view(['GET'])
-@login_required
 def list_rooms(request):
-    """List all chat rooms for the current user"""
+    if not request.user.is_authenticated:
+        return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
     rooms = ChatRoom.objects.filter(user=request.user).order_by('-created_at')
     serializer = ChatRoomSerializer(rooms, many=True)
     return Response(serializer.data)
 
 @csrf_exempt
 @api_view(['GET', 'PUT', 'DELETE'])
-@login_required
 def room_detail(request, room_id):
-    """Get, update or delete a chat room"""
+    if not request.user.is_authenticated:
+        return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+    
     try:
         room = ChatRoom.objects.get(id=room_id, user=request.user)
     except ChatRoom.DoesNotExist:
