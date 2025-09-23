@@ -15,3 +15,30 @@ class Message(models.Model):
 
     class Meta:
         ordering = ['-timestamp']
+
+class UserAnalysis(models.Model):
+    ANALYSIS_TYPES = [
+        ('sentiment', 'User Sentiment Analysis'),
+        ('tone', 'Communication Tone'),
+        ('topic', 'Topic Interest Analysis'),
+        ('preference', 'User Preferences'),
+        ('behavior', 'User Behavior Pattern'),
+        ('engagement', 'User Engagement Level'),
+        ('user_needs', 'User Needs Assessment'),
+        # Legacy types for backward compatibility
+        ('communication_style', 'Communication Style'),
+        ('expertise_level', 'Expertise Level'),
+        ('response_preferences', 'Response Preferences'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='analyses')
+    analysis_type = models.CharField(max_length=50, choices=ANALYSIS_TYPES)
+    data = models.JSONField(default=dict)
+    confidence_score = models.FloatField(default=0.0)
+    last_updated = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['user', 'analysis_type']
+        verbose_name = 'User Analysis'
+        verbose_name_plural = 'User Analyses'

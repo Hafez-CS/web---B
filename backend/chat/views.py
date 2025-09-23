@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import MessageSerializer, ChatRoomSerializer
-from .ai_utils import ask_ai
+from .ai_utils import get_ai_response
 
 @csrf_exempt
 @api_view(['GET', 'POST'])
@@ -30,16 +30,13 @@ def chat_room(request, room_id=None):
             if not user_message:
                 return Response({'error': 'user_message is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Get chat history
-            history = Message.objects.filter(room=room).order_by('timestamp')
-            
-            # Get AI response
-            ai_response = get_ai_response(user_message, history)
+            # دریافت پاسخ AI با تحلیل خودکار (فقط از پیام‌های همین چت روم)
+            ai_response = get_ai_response(user_message, request.user, room_id)
             
             # Create and save the message
             message = Message.objects.create(
                 room=room,
-                user=request.user,  # اضافه کردن کاربر به پیام
+                user=request.user,
                 user_message=user_message,
                 ai_response=ai_response
             )
@@ -50,9 +47,7 @@ def chat_room(request, room_id=None):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def get_ai_response(user_message, history):
-    """استفاده از تابع ask_ai از ماژول ai_utils"""
-    return ask_ai(user_message, history)
+# حذف تابع‌های اضافی که جایگزین شدند
 
 @csrf_exempt
 @api_view(['POST'])

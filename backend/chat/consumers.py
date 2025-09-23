@@ -1,7 +1,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from .models import Message, ChatRoom
-from .views import get_ai_response
+from .ai_utils import get_ai_response
 from asgiref.sync import sync_to_async
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -25,15 +25,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
         
+        # دریافت کاربر و اتاق چت
+        user = self.scope.get('user')
         room = await sync_to_async(ChatRoom.objects.get)(id=self.room_id)
+        
+        # ساخت پیام جدید
         new_msg = await sync_to_async(Message.objects.create)(
             room=room,
+            user=user,
             user_message=message
         )
         
-        history = await sync_to_async(list)(Message.objects.filter(room=room).order_by('timestamp'))
-        ai_response = await sync_to_async(get_ai_response)(message, history[:-1])
+        # دریافت پاسخ AI (فقط از پیام‌های همین چت روم)
+        ai_response = await sync_to_async(get_ai_response)(message, user, self.room_id)
         
+        # ذخیره پاسخ AI
         new_msg.ai_response = ai_response
         await sync_to_async(new_msg.save)()
         
