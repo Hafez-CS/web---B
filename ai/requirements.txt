@@ -1,0 +1,16 @@
+arabic_reshaper==3.0.0
+fastapi==0.117.1
+matplotlib==3.10.6
+numpy==2.3.3
+pandas==2.3.2
+protobuf==6.32.1
+pydantic==2.11.9
+pyodbc==5.2.0
+python-dotenv==1.1.1
+scikit_learn==1.7.2
+uvicorn==0.37.0
+xgboost==3.0.5
+google==3.0.0
+python-bidi==0.6.6
+google-generativeai
+google-genai
