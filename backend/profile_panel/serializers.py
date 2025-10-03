@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from login_signup.models import User
-from .models import UploadedFile
 
 
 
@@ -24,18 +23,3 @@ class UserSerializer(serializers.ModelSerializer):
             instance.profile_pic_path = validated_data['profile_pic_path']
         instance.save()
         return instance
-
-
-class UploadedFileSerializer(serializers.ModelSerializer):
-    file_url = serializers.SerializerMethodField()
-
-    class Meta:
-        model = UploadedFile
-        fields = ['id' , 'file' , 'file_url' , 'uploaded_at']
-        read_only_fields = ['id' , 'file_url' , 'uploaded_at']
-
-    def get_file_url(self, obj):
-        return obj.file.url if obj.file else None
-
-    def create(self, validated_data):
-        return UploadedFile.objects.create(**validated_data)

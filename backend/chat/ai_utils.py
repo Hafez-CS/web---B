@@ -168,8 +168,12 @@ def get_ai_response(prompt: str, user=None, room_id=None) -> str:
         # دریافت تاریخچه پیام‌های کاربر برای context (فقط از همین چت روم)
         history = None
         if user and room_id:
-            from .models import Message
-            history = Message.objects.filter(user=user, room_id=room_id).order_by('-timestamp')[:10]
+            from .models import Message, ChatRoom
+            try:
+                room = ChatRoom.objects.get(user=user, user_room_id=room_id)
+                history = Message.objects.filter(user=user, room=room).order_by('-timestamp')[:10]
+            except ChatRoom.DoesNotExist:
+                history = None
         
         # دریافت پاسخ از AI
         ai_response = ask_ai(prompt, history, user, room_id)

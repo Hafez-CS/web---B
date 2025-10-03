@@ -1,10 +1,28 @@
 from django.db import models
+from django.core.validators import FileExtensionValidator
+from django.core.exceptions import ValidationError
 from login_signup.models import User
 
 class ChatRoom(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user_room_id = models.PositiveIntegerField()  # ID اتاق برای هر کاربر جداگانه
     name = models.CharField(max_length=255, default="New Chat")
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['user', 'user_room_id']  # هر کاربر نمی‌تواند دو اتاق با یک ID داشته باشد
+        ordering = ['user', 'user_room_id']
+    
+    def save(self, *args, **kwargs):
+        if not self.user_room_id:
+            # افزایش شمارنده اتاق کاربر و تنظیم user_room_id
+            self.user.room_counter += 1
+            self.user_room_id = self.user.room_counter
+            self.user.save()
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.user.username} - Room {self.user_room_id}: {self.name}"
 
 class Message(models.Model):
     room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, null=True, related_name='messages')
@@ -42,3 +60,16 @@ class UserAnalysis(models.Model):
         unique_together = ['user', 'analysis_type']
         verbose_name = 'User Analysis'
         verbose_name_plural = 'User Analyses'
+
+
+
+class UploadedFile(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # user_id
+    file = models.FileField(upload_to='uploads/', validators=[FileExtensionValidator(allowed_extensions=['.xlsx', '.xls' ,'.csv'])])
+    ai_response = models.TextField(null=True, blank=True)  # پاسخ AI
+    created_at = models.DateTimeField(auto_now_add=True)  # uploaded_at rename شده
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, null=True, blank=True, related_name='uploaded_files')  # room_id
+    result_json = models.TextField(null=True, blank=True)  # نتیجه JSON بصورت متن طولانی
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.file.name}"
