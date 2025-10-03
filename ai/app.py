@@ -303,7 +303,9 @@ async def full_analysis(
         description="Configuration JSON as a string (e.g., '{\"test_size\":0.2, ...}')."
     ),
     selection_mode: str = Form(..., description="Selection mode: 'ai' for automatic selection or 'user' for manual."),
-    target_column: Optional[str] = Form(None, description="The specific target column name if selection_mode is 'user'.")
+    target_column: Optional[str] = Form(None, description="The specific target column name if selection_mode is 'user'."),
+    user_id: Optional[str] = Form(None, description="The user ID for tracking purposes."),
+    room_id: Optional[str] = Form(None, description="The room ID for tracking purposes.")
 ):
     
     all_columns = []
@@ -338,6 +340,8 @@ async def full_analysis(
                     "message": "در حالت انتخابی کاربر، ستون هدف معتبر و موجود در فایل باید ارسال شود.",
                     "all_columns": all_columns,
                     "target_column": target_column if target_column else "N/A",
+                    "user_id": user_id,  # 👈 اضافه شد
+                    "room_id": room_id,  # 👈 اضافه شد
                     "initial_status": "Error"
                 })
             target_to_use = target_column
@@ -355,6 +359,8 @@ async def full_analysis(
                      "message": "AI نتوانست ستون هدف معتبری پیدا کند. لطفاً خودتان از لیست زیر یک ستون انتخاب کنید.",
                      "all_columns": all_columns,
                      "target_column": "N/A",
+                     "user_id": user_id,  # 👈 اضافه شد
+                     "room_id": room_id,  # 👈 اضافه شد
                      "initial_status": "ColumnSelectionRequired"
                  })
 
@@ -371,7 +377,9 @@ async def full_analysis(
             "algorithm_used": prediction_results.get("algorithm_used", "N/A"),
             "prediction_plot_data": prediction_results.get("prediction_plot_data", {}),
             "metrics": prediction_results.get("metrics", {}),
-            "all_columns": all_columns, 
+            "all_columns": all_columns,
+            "user_id": user_id,  # 👈 اضافه شد
+            "room_id": room_id,  # 👈 اضافه شد
             "initial_status": "Success" 
         }
         
@@ -386,6 +394,8 @@ async def full_analysis(
                 "message": error_message,
                 "all_columns": all_columns,
                 "target_column": target_to_use,
+                "user_id": user_id,  # 👈 اضافه شد
+                "room_id": room_id,  # 👈 اضافه شد
                 "initial_status": "Error"
             }
         )
