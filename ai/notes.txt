@@ -1,0 +1,2 @@
+### Runnig server in another port to prevent conflict with django
+fastapi dev app.py --port 8080

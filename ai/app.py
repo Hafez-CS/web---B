@@ -16,10 +16,6 @@ from pydantic import BaseModel
 
 from anyio import to_thread
 
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-
 # Sklearn Imports
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -63,20 +59,8 @@ DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek/deepseek-chat")
 app = FastAPI(
     title="Smart Financial Forecasting Platform (Unified API)",
     description=("Supports Regression Models with AI Target Selection."),
-    version="2.3.0", # نسخه به روز شده
+    version="2.4.0", # نسخه به روز شده - بدون plotting
 )
-
-PLOT_DIR = "static/plots"  
-DATA_DIR = "static/data"    
-
-if not os.path.exists(PLOT_DIR):
-    os.makedirs(PLOT_DIR)
-if not os.path.exists(DATA_DIR):
-    os.makedirs(DATA_DIR)
-
-from fastapi.staticfiles import StaticFiles
-app.mount("/static/plots", StaticFiles(directory=PLOT_DIR), name="static_plots")
-app.mount("/static/data", StaticFiles(directory=DATA_DIR), name="static_data")
 
 
 class FullAnalysisRequest(BaseModel):
@@ -86,32 +70,7 @@ class FullAnalysisRequest(BaseModel):
     max_rows_preview: int = 5
 
 
-# ===================== توابع کمکی (بدون تغییر) =====================
-
-def generate_plot(plot_func, input_filename: str, *args, target_name=None, title=None, xlabel=None, ylabel=None, custom_logic=None, **kwargs) -> str:
-    """Generates and saves the matplotlib plot to PLOT_DIR."""
-    plt.figure(figsize=(12, 7))
-    plot_func(*args, **kwargs)
-    
-    if custom_logic:
-        custom_logic() 
-
-    if title: plt.title(title) 
-    if xlabel: plt.xlabel(xlabel) 
-    if ylabel: plt.ylabel(ylabel) 
-    plt.grid(True)
-    plt.tight_layout()
-    
-    base_name = os.path.splitext(input_filename)[0]
-    safe_target_name = "".join(c for c in target_name if c.isalnum() or c in ('_', '-')).strip().lower() if target_name else "default"
-    file_name = f"{base_name}_{safe_target_name}_chart.png"
-    
-    save_path = os.path.join(PLOT_DIR, file_name) 
-    plt.savefig(save_path, format="png", dpi=150) 
-    plt.close() 
-    
-    return file_name
-
+# ===================== توابع کمکی =====================
 
 def basic_clean(df: pd.DataFrame) -> pd.DataFrame:
     df = df.dropna(axis=1, how="all").copy()
@@ -316,41 +275,13 @@ def run_prediction(df: pd.DataFrame, target: str, algo: str, input_filename: str
     y_actual_smooth = y_actual_series.rolling(window=SMOOTHING_WINDOW, min_periods=1, center=True).mean().tolist()
     y_pred_smooth = y_pred_series.rolling(window=SMOOTHING_WINDOW, min_periods=1, center=True).mean().tolist()
 
-    # Plotting Logic (uses SMOOTHED data)
-    indices_full = np.arange(len(y_actual_full)) 
-    indices_future = np.arange(len(y_actual_full) - 1, len(y_actual_full) + FUTURE_STEPS) 
-    
-    def add_future_line():
-        future_plot_data = [y_pred_smooth[-1]] + y_future_pred_list
-        plt.plot(indices_full, y_actual_smooth, label='Actual Values (Smoothed)', color='blue', linewidth=2) 
-        plt.plot(indices_full, y_pred_smooth, label='Predicted Values (Smoothed)', color='orange', linewidth=2)
-        plt.plot(indices_future, future_plot_data, label='Future Prediction', color='green', linestyle='--', linewidth=2)
-        plt.legend() 
-
-    # ارسال target_name به generate_plot برای نام‌گذاری خروجی
-    chart_filename = generate_plot(
-        plt.plot, input_filename,
-        [0], [0], target_name=target,
-        title=f"Smoothed Prediction of {target} using {algo} model (Window={SMOOTHING_WINDOW})", xlabel="Data Index", ylabel=target,
-        custom_logic=add_future_line
-    )
-    print(f"--- MID: Plot generated: {chart_filename}") 
-    
-    # ذخیره داده‌های JSON
-    base_name = os.path.splitext(input_filename)[0]
-    safe_target_name = "".join(c for c in target if c.isalnum() or c in ('_', '-')).strip().lower()
-    data_filename = f"{base_name}_{safe_target_name}_data.json"
-    data_save_path = os.path.join(DATA_DIR, data_filename) 
-    
+    # آماده‌سازی داده‌های JSON برای response
     raw_prediction_data = {
         "actual_values": y_actual_smooth, 
         "predicted_values": y_pred_smooth,
         "future_predictions": y_future_pred_list,
         "smoothing_window": SMOOTHING_WINDOW
     }
-    
-    with open(data_save_path, 'w') as f:
-        json.dump(raw_prediction_data, f, indent=4)
         
     print("--- END: Prediction function finished successfully.")
         
@@ -358,8 +289,7 @@ def run_prediction(df: pd.DataFrame, target: str, algo: str, input_filename: str
         "algorithm_used": algo,
         "target_used": target,
         "metrics": {"MAE": mae, "RMSE": rmse},
-        "prediction_chart_filename": chart_filename,
-        "prediction_data_url": f"/static/data/{data_filename}", 
+        "prediction_plot_data": raw_prediction_data,
         "prediction_status": "Success"
     }
 
@@ -439,8 +369,7 @@ async def full_analysis(
             "message": f"تحلیل مالی با ستون '{target_to_use}' انجام شد.",
             "target_column": prediction_results.get("target_used", "N/A"),
             "algorithm_used": prediction_results.get("algorithm_used", "N/A"),
-            "plot_url": f"/static/plots/{prediction_results.get('prediction_chart_filename', '')}", 
-            "prediction_data_url": prediction_results.get('prediction_data_url', ''), 
+            "prediction_plot_data": prediction_results.get("prediction_plot_data", {}),
             "metrics": prediction_results.get("metrics", {}),
             "all_columns": all_columns, 
             "initial_status": "Success" 
