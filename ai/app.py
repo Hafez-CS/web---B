@@ -304,8 +304,8 @@ async def full_analysis(
     ),
     selection_mode: str = Form(..., description="Selection mode: 'ai' for automatic selection or 'user' for manual."),
     target_column: Optional[str] = Form(None, description="The specific target column name if selection_mode is 'user'."),
-    user_id: Optional[str] = Form(None, description="The user ID for tracking purposes."),
-    room_id: Optional[str] = Form(None, description="The room ID for tracking purposes.")
+    user_id: int = Form(..., description="The user ID for tracking purposes."),
+    room_id: int = Form(..., description="The room ID for tracking purposes.")
 ):
     
     all_columns = []
@@ -373,14 +373,14 @@ async def full_analysis(
         # 3. تولید خروجی نهایی
         final_response = {
             "message": f"تحلیل مالی با ستون '{target_to_use}' انجام شد.",
-            "target_column": prediction_results.get("target_used", "N/A"),
-            "algorithm_used": prediction_results.get("algorithm_used", "N/A"),
-            "prediction_plot_data": prediction_results.get("prediction_plot_data", {}),
-            "metrics": prediction_results.get("metrics", {}),
-            "all_columns": all_columns,
             "user_id": user_id,  # 👈 اضافه شد
             "room_id": room_id,  # 👈 اضافه شد
-            "initial_status": "Success" 
+            "initial_status": "Success",
+            "target_column": prediction_results.get("target_used", "N/A"),
+            "all_columns": all_columns,
+            "metrics": prediction_results.get("metrics", {}),
+            "algorithm_used": prediction_results.get("algorithm_used", "N/A"),
+            "prediction_plot_data": prediction_results.get("prediction_plot_data", {})
         }
         
     except HTTPException as e:

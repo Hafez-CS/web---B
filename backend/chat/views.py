@@ -5,15 +5,25 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view , permission_classes , parser_classes
 from login_signup.models import User
 from .models import UploadedFile
-from .serializers import UploadedFileSerializer
+from .serializers import (
+    UploadedFileSerializer, 
+    MessageSerializer, 
+    ChatRoomSerializer
+)
 from rest_framework.parsers import FileUploadParser , MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import MessageSerializer, ChatRoomSerializer
 from .ai_utils import get_ai_response
 import requests
 import json
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+env_path = Path(__file__).resolve().parent.parent / '.env'
+load_dotenv(env_path)
 
 @csrf_exempt
 @api_view(['GET', 'POST'])
@@ -27,9 +37,41 @@ def chat_room(request, room_id=None):
         return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
+        # دریافت پیام‌ها
         messages = Message.objects.filter(room=room).order_by('timestamp')
-        serializer = MessageSerializer(messages, many=True)
-        return Response(serializer.data)
+        
+        # دریافت فایل‌های آپلود شده در این روم
+        uploaded_files = UploadedFile.objects.filter(room=room).order_by('created_at')
+        
+        # serialize کردن پیام‌ها
+        message_serializer = MessageSerializer(messages, many=True)
+        message_data = message_serializer.data
+        
+        # serialize کردن فایل‌ها
+        file_serializer = UploadedFileSerializer(uploaded_files, many=True)
+        file_data = file_serializer.data
+        
+        # افزودن فیلد type و created_at برای مرتب‌سازی
+        for item in message_data:
+            item['type'] = 'message'
+            item['created_at'] = item['timestamp']
+        
+        for item in file_data:
+            item['type'] = 'file'
+            # created_at از قبل موجود است
+        
+        # ترکیب و مرتب‌سازی بر اساس زمان
+        combined_data = message_data + file_data
+        combined_data.sort(key=lambda x: x['created_at'])
+        
+        # آماده‌سازی پاسخ نهایی
+        response_data = {
+            'room_id': room.user_room_id,
+            'room_name': room.name,
+            'timeline': combined_data
+        }
+        
+        return Response(response_data)
     
     elif request.method == 'POST':
         try:
@@ -107,121 +149,117 @@ def room_detail(request, room_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FileUploadParser])
-def upload_file(request):
+def upload_file(request, room_id):
+    """
+    API واحد برای آپلود فایل و تحلیل AI در یک اتاق مشخص
+    - فایل آپلود می‌شود
+    - بلافاصله تحلیل AI انجام می‌شود  
+    - نتیجه تحلیل برگردانده می‌شود
+    - room_id اجباری است
+    """
     try:
         # دریافت فایل از request
         uploaded_file = request.FILES.get('file')
         if not uploaded_file:
             return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # دریافت target_column از request (اختیاری - اگر خالی باشد، مقدار پیش‌فرض None است)
+        target_column = request.data.get('target_column', None)
+
+        # user_id از توکن authentication گرفته می‌شود
+        user_id = request.user.id
         
-        # دریافت room_id از request (اختیاری)
-        room_id = request.data.get('room_id', None)
+        # بررسی وجود room - حالا اجباری است
+        try:
+            room_obj = ChatRoom.objects.get(user_room_id=room_id, user=request.user)
+        except ChatRoom.DoesNotExist:
+            return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
         
-        # ارسال فایل به API خارجی
-        external_api_response = send_file_to_external_api(
-            uploaded_file=uploaded_file,
-            user=request.user,
-            room_id=room_id
-        )
+        # URL API تحلیل مالی از متغیر محیطی
+        EXTERNAL_API_URL = os.getenv('FASTAPI_ANALYSIS_URL', 'http://127.0.0.1:8080/full_analysis')
         
-        return Response(external_api_response, status=status.HTTP_200_OK)
+        # آماده‌سازی داده‌ها برای ارسال
+        files = {'file': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)}
+        
+        # تعیین selection_mode بر اساس target_column
+        selection_mode = 'ai' if target_column == None else 'user'
+        target_col_value = None if target_column == None else target_column
+        
+        data = {
+            'selection_mode': selection_mode,  # حالت انتخاب (ai یا user)
+            'target_column': target_col_value,  # نام ستون هدف یا None برای AI
+            'user_id': user_id,
+            'room_id': room_id,
+        }
+        
+        # ارسال درخواست به API تحلیل مالی
+        try:
+            response = requests.post(
+                EXTERNAL_API_URL,
+                files=files,
+                data=data,
+                timeout=300
+            )
+            
+            if response.status_code == 200:
+                api_result = response.json()
+                
+                # ذخیره نتیجه در دیتابیس
+                try:
+                    uploaded_record = UploadedFile.objects.create(
+                        user=request.user,
+                        file=uploaded_file,
+                        room=room_obj,
+                        ai_response=api_result.get('message', ''),
+                        result_json=json.dumps(api_result)
+                    )
+                    
+                    # استفاده از serializer برای پاسخ
+                    file_serializer = UploadedFileSerializer(uploaded_record)
+                    
+                    # پاسخ موفق
+                    return Response({
+                        'success': True,
+                        'message': 'File analyzed successfully',
+                        'analysis_result': api_result,
+                        'uploaded_file': file_serializer.data,
+                        'file_info': {
+                            'name': uploaded_file.name,
+                            'size': uploaded_file.size,
+                            'type': uploaded_file.content_type
+                        }
+                    }, status=status.HTTP_200_OK)
+                    
+                except Exception as db_error:
+                    # اگر ذخیره در دیتابیس مشکل داشت
+                    return Response({
+                        'success': True,
+                        'message': 'File analyzed successfully but database save failed',
+                        'analysis_result': api_result,
+                        'database_warning': str(db_error),
+                        'file_info': {
+                            'name': uploaded_file.name,
+                            'size': uploaded_file.size,
+                            'type': uploaded_file.content_type
+                        }
+                    }, status=status.HTTP_200_OK)
+                    
+            else:
+                return Response({
+                    'success': False,
+                    'error': f'Analysis API error: {response.status_code}',
+                    'message': response.text
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+        except requests.RequestException as e:
+            return Response({
+                'success': False,
+                'error': 'Failed to connect to analysis API',
+                'message': str(e)
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-def send_file_to_external_api(uploaded_file, user, room_id=None):
-    """ارسال فایل به API تحلیل مالی"""
-    import requests
-    
-    # URL API تحلیل مالی
-    EXTERNAL_API_URL = "http://127.0.0.1:8000/full_analysis"  # آدرس FastAPI شما
-    
-    # آماده‌سازی داده‌ها برای ارسال
-    files = {'file': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)}
-    
-    # تنظیمات پیش‌فرض برای تحلیل
-    config = {
-        "test_size": 0.2,
-        "random_state": 42,
-        "max_hist": 6,
-        "max_rows_preview": 5
-    }
-    
-    data = {
-        'config': json.dumps(config),  # JSON string مطابق انتظار API
-        'selection_mode': 'ai',  # حالت انتخاب خودکار با AI
-        'target_column': None,  # چون از حالت AI استفاده می‌کنیم
-        # فیلدهای اضافی برای tracking
-        'user_id': user.id,
-        'room_id': room_id,
-    }
-    
-    try:
-        # ارسال درخواست به API تحلیل مالی
-        response = requests.post(
-            EXTERNAL_API_URL,
-            files=files,
-            data=data,
-            timeout=300  # 60 ثانیه timeout چون تحلیل ممکن است زمان‌بر باشد
-        )
-        
-        if response.status_code == 200:
-            api_result = response.json()
-            
-            # ذخیره نتیجه در دیتابیس برای بازیابی بعدی
-            try:
-                # دریافت room object اگر room_id ارسال شده
-                room_obj = None
-                if room_id:
-                    room_obj = ChatRoom.objects.get(user_room_id=room_id, user=user)
-                
-                # ایجاد رکورد در UploadedFile
-                uploaded_record = UploadedFile.objects.create(
-                    user=user,
-                    file=uploaded_file,  # فایل را هم ذخیره می‌کنیم
-                    room=room_obj,
-                    ai_response=api_result.get('message', ''),
-                    result_json=json.dumps(api_result)  # تمام نتیجه را ذخیره می‌کنیم
-                )
-                
-                return {
-                    'success': True,
-                    'message': 'File analyzed successfully',
-                    'analysis_result': api_result,
-                    'database_id': uploaded_record.id,
-                    'file_info': {
-                        'name': uploaded_file.name,
-                        'size': uploaded_file.size,
-                        'type': uploaded_file.content_type
-                    }
-                }
-                
-            except Exception as db_error:
-                # اگر ذخیره در دیتابیس مشکل داشت، حداقل نتیجه تحلیل را برگردان
-                return {
-                    'success': True,
-                    'message': 'File analyzed successfully but database save failed',
-                    'analysis_result': api_result,
-                    'database_error': str(db_error),
-                    'file_info': {
-                        'name': uploaded_file.name,
-                        'size': uploaded_file.size,
-                        'type': uploaded_file.content_type
-                    }
-                }
-        else:
-            return {
-                'success': False,
-                'error': f'Analysis API error: {response.status_code}',
-                'message': response.text
-            }
-            
-    except requests.RequestException as e:
-        return {
-            'success': False,
-            'error': 'Failed to connect to analysis API',
-            'message': str(e)
-        }
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

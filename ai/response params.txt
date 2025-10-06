@@ -1,0 +1,10 @@
+"message": f"تحلیل مالی با ستون '{target_to_use}' انجام شد.",
+
+            "user_id": user_id,  # 👈 اضافه شد
+            "room_id": room_id,  # 👈 اضافه شد
+            "initial_status": "Success",
+            "target_column": prediction_results.get("target_used", "N/A"),
+            "all_columns": all_columns,
+            "metrics": prediction_results.get("metrics", {}),
+            "algorithm_used": prediction_results.get("algorithm_used", "N/A"),
+            "prediction_plot_data": prediction_results.get("prediction_plot_data", {})

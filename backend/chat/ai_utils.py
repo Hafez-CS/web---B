@@ -1,11 +1,16 @@
 from openai import OpenAI
 from django.conf import settings
 import os
+from dotenv import load_dotenv
 from .models import UserAnalysis
+
+# Load environment variables
+load_dotenv()
+
 # تنظیمات Deepseek - بروزرسانی API
 client = OpenAI(
-    api_key=os.getenv('OPENROUTER_API_KEY', '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'),
-    base_url="https://openrouter.ai/api/v1"
+    api_key=os.getenv('OPENROUTER_API_KEY'),
+    base_url=os.getenv('OPENROUTER_BASE_URL')
 )
 
 def get_user_system_prompt(user):

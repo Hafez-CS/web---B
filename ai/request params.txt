@@ -1,0 +1,6 @@
+file
+config : default= {"test_size":0.2,"random_state":42,"max_hist":6,"max_rows_preview":5}
+selection_mode :ai or user
+target_column
+user_id
+room_id

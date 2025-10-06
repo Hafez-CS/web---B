@@ -59,3 +59,4 @@ django-rest-swagger
 mssql-django
 pyodbc
 Pillow
+python-dotenv
