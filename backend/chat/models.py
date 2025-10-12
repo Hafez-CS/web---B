@@ -5,25 +5,34 @@ from login_signup.models import User
 
 class ChatRoom(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    user_room_id = models.PositiveIntegerField()  # ID اتاق برای هر کاربر جداگانه
+    user_room_id = models.PositiveIntegerField()
     name = models.CharField(max_length=255, default="New Chat")
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        unique_together = ['user', 'user_room_id']  # هر کاربر نمی‌تواند دو اتاق با یک ID داشته باشد
+        unique_together = ['user', 'user_room_id']
         ordering = ['user', 'user_room_id']
     
     def save(self, *args, **kwargs):
         if not self.user_room_id:
-            # افزایش شمارنده اتاق کاربر و تنظیم user_room_id
-            self.user.room_counter += 1
-            self.user_room_id = self.user.room_counter
+            # پیدا کردن حداکثر user_room_id برای این کاربر
+            max_room_id = ChatRoom.objects.filter(user=self.user).aggregate(
+                models.Max('user_room_id')
+            )['user_room_id__max'] or 0
+            self.user_room_id = max_room_id + 1
+            # به‌روزرسانی room_counter کاربر
+            self.user.room_counter = max_room_id + 1
             self.user.save()
         super().save(*args, **kwargs)
+    
+    def clean(self):
+        if self.user_room_id <= 0:
+            raise ValidationError("user_room_id must be greater than 0")
     
     def __str__(self):
         return f"{self.user.username} - Room {self.user_room_id}: {self.name}"
 
+        
 class Message(models.Model):
     room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, null=True, related_name='messages')
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='chat_messages')

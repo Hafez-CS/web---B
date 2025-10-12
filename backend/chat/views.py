@@ -269,3 +269,14 @@ def get_files(request):
     return Response(serializer.data)
 
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_room(request , room_id):
+    try:
+        room = ChatRoom.objects.get(user_room_id=room_id , user=request.user)
+        room.delete()
+        return Response({"message": "اتاق با موقیت حذف شد"}, status=status.HTTP_204_NO_CONTENT)
+    except ChatRoom.DoesNotExist:
+        return Response({"error": "اتاق پیدا نشد یا شما مجاز به حذف آن نیستید"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

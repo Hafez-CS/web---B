@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import chat_room, create_room, list_rooms, room_detail, upload_file, get_files
+from .views import chat_room, create_room, list_rooms, room_detail, upload_file, get_files , delete_room
 
 urlpatterns = [
     path('rooms/', list_rooms, name='room-list'),
@@ -8,4 +8,5 @@ urlpatterns = [
     path('rooms/<int:room_id>/messages/', chat_room, name='room-messages'),
     path('rooms/<int:room_id>/upload/', upload_file, name='upload_file'),
     path('files/', get_files, name='get_files'),
+    path('rooms/<str:room_id>/delete/',delete_room, name='delete_room' )
 ]

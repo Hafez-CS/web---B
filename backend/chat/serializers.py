@@ -12,19 +12,20 @@ class MessageSerializer(serializers.ModelSerializer):
 
 class ChatRoomSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source='user.id', read_only=True)
-    message_count = serializers.SerializerMethodField()
-    file_count = serializers.SerializerMethodField()
+    name = serializers.CharField(max_length=200)
+    # message_count = serializers.SerializerMethodField()
+    # file_count = serializers.SerializerMethodField()
     
     class Meta:
         model = ChatRoom
-        fields = ['id', 'user_room_id', 'name', 'created_at', 'user_id', 'message_count', 'file_count']
-        read_only_fields = ['id', 'user_room_id', 'created_at', 'user_id', 'message_count', 'file_count']
+        fields = ['id', 'user_room_id', 'name', 'created_at', 'user_id']
+        read_only_fields = ['id', 'user_room_id', 'created_at', 'user_id']
     
-    def get_message_count(self, obj):
-        return obj.message_set.count()
+    # def get_message_count(self, obj):
+    #     return obj.message_set.count()
     
-    def get_file_count(self, obj):
-        return obj.uploadedfile_set.count()
+    # def get_file_count(self, obj):
+    #     return obj.uploadedfile_set.count()
 
 class UploadedFileSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField()
