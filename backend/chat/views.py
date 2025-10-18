@@ -15,6 +15,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from .ai_utils import get_ai_response
+from .ai_file_analyze import financial_predictor
 import requests
 import json
 import os
@@ -150,113 +151,69 @@ def room_detail(request, room_id):
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FileUploadParser])
 def upload_file(request, room_id):
-    """
-    API واحد برای آپلود فایل و تحلیل AI در یک اتاق مشخص
-    - فایل آپلود می‌شود
-    - بلافاصله تحلیل AI انجام می‌شود  
-    - نتیجه تحلیل برگردانده می‌شود
-    - room_id اجباری است
-    """
     try:
-        # دریافت فایل از request
         uploaded_file = request.FILES.get('file')
         if not uploaded_file:
             return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # دریافت target_column از request (اختیاری - اگر خالی باشد، مقدار پیش‌فرض None است)
         target_column = request.data.get('target_column', None)
-
-        # user_id از توکن authentication گرفته می‌شود
-        user_id = request.user.id
+        if target_column == '' or target_column == 'null':
+            target_column = None
         
-        # بررسی وجود room - حالا اجباری است
         try:
             room_obj = ChatRoom.objects.get(user_room_id=room_id, user=request.user)
         except ChatRoom.DoesNotExist:
             return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
         
-        # URL API تحلیل مالی از متغیر محیطی
-        EXTERNAL_API_URL = os.getenv('FASTAPI_ANALYSIS_URL', 'http://127.0.0.1:8080/full_analysis')
-        
-        # آماده‌سازی داده‌ها برای ارسال
-        files = {'file': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)}
-        
-        # تعیین selection_mode بر اساس target_column
-        selection_mode = 'ai' if target_column == None else 'user'
-        target_col_value = None if target_column == None else target_column
-        
-        data = {
-            'selection_mode': selection_mode,  # حالت انتخاب (ai یا user)
-            'target_column': target_col_value,  # نام ستون هدف یا None برای AI
-            'user_id': user_id,
-            'room_id': room_id,
-        }
-        
-        # ارسال درخواست به API تحلیل مالی
         try:
-            response = requests.post(
-                EXTERNAL_API_URL,
-                files=files,
-                data=data,
-                timeout=300
-            )
+            analysis_result = financial_predictor(uploaded_file, target_column)
             
-            if response.status_code == 200:
-                api_result = response.json()
-                
-                # ذخیره نتیجه در دیتابیس
-                try:
-                    uploaded_record = UploadedFile.objects.create(
-                        user=request.user,
-                        file=uploaded_file,
-                        room=room_obj,
-                        ai_response=api_result.get('message', ''),
-                        result_json=json.dumps(api_result)
-                    )
-                    
-                    # استفاده از serializer برای پاسخ
-                    file_serializer = UploadedFileSerializer(uploaded_record)
-                    
-                    # پاسخ موفق
-                    return Response({
-                        'success': True,
-                        'message': 'File analyzed successfully',
-                        'analysis_result': api_result,
-                        'uploaded_file': file_serializer.data,
-                        'file_info': {
-                            'name': uploaded_file.name,
-                            'size': uploaded_file.size,
-                            'type': uploaded_file.content_type
-                        }
-                    }, status=status.HTTP_200_OK)
-                    
-                except Exception as db_error:
-                    # اگر ذخیره در دیتابیس مشکل داشت
-                    return Response({
-                        'success': True,
-                        'message': 'File analyzed successfully but database save failed',
-                        'analysis_result': api_result,
-                        'database_warning': str(db_error),
-                        'file_info': {
-                            'name': uploaded_file.name,
-                            'size': uploaded_file.size,
-                            'type': uploaded_file.content_type
-                        }
-                    }, status=status.HTTP_200_OK)
-                    
-            else:
+            if 'error' in analysis_result:
                 return Response({
                     'success': False,
-                    'error': f'Analysis API error: {response.status_code}',
-                    'message': response.text
+                    'error': 'Analysis failed',
+                    'message': analysis_result['error']
                 }, status=status.HTTP_400_BAD_REQUEST)
+            
+            try:
+                uploaded_record = UploadedFile.objects.create(
+                    user=request.user,
+                    file=uploaded_file,
+                    room=room_obj,
+                    message=analysis_result.get('message', ''),
+                    target_column=analysis_result.get('target_column', ''),
+                    selected_model=analysis_result.get('selected_model', ''),
+                    gemini_recommendation=analysis_result.get('gemini_recommendation', ''),
+                    prediction_data=json.dumps(analysis_result.get('prediction_data', {}))
+                )
                 
-        except requests.RequestException as e:
+                file_serializer = UploadedFileSerializer(uploaded_record)
+                
+                return Response({
+                    'success': True,
+                    'analysis_result': analysis_result,
+                    'file_user_info': file_serializer.data
+                }, status=status.HTTP_200_OK)
+                
+            except Exception as db_error:
+                return Response({
+                    'success': True,
+                    'message': 'File analyzed successfully but database save failed',
+                    'analysis_result': analysis_result,
+                    'database_warning': str(db_error),
+                    'file_info': {
+                        'name': uploaded_file.name,
+                        'size': uploaded_file.size,
+                        'type': uploaded_file.content_type
+                    }
+                }, status=status.HTTP_200_OK)
+                
+        except Exception as analysis_error:
             return Response({
                 'success': False,
-                'error': 'Failed to connect to analysis API',
-                'message': str(e)
-            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+                'error': 'Analysis process failed',
+                'message': str(analysis_error)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

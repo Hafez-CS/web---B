@@ -60,3 +60,12 @@ mssql-django
 pyodbc
 Pillow
 python-dotenv
+
+
+pandas
+numpy
+matplotlib
+scikit-learn
+google-genai
+arabic-reshaper
+python-bidi

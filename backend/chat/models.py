@@ -75,10 +75,14 @@ class UserAnalysis(models.Model):
 class UploadedFile(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # user_id
     file = models.FileField(upload_to='uploads/', validators=[FileExtensionValidator(allowed_extensions=['.xlsx', '.xls' ,'.csv'])])
-    ai_response = models.TextField(null=True, blank=True)  # پاسخ AI
-    created_at = models.DateTimeField(auto_now_add=True)  # uploaded_at rename شده
-    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, null=True, blank=True, related_name='uploaded_files')  # room_id
-    result_json = models.TextField(null=True, blank=True)  # نتیجه JSON بصورت متن طولانی
+    created_at = models.DateTimeField(auto_now_add=True)
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, null=True, blank=True, related_name='uploaded_files')
+    
+    message = models.TextField(null=True, blank=True)
+    target_column = models.CharField(max_length=255, null=True, blank=True)
+    selected_model = models.CharField(max_length=100, null=True, blank=True)
+    gemini_recommendation = models.TextField(null=True, blank=True)
+    prediction_data = models.TextField(null=True, blank=True)
     
     def __str__(self):
         return f"{self.user.username} - {self.file.name}"

@@ -28,15 +28,13 @@ class ChatRoomSerializer(serializers.ModelSerializer):
     #     return obj.uploadedfile_set.count()
 
 class UploadedFileSerializer(serializers.ModelSerializer):
-    file_url = serializers.SerializerMethodField()
-    file_name = serializers.SerializerMethodField()
     user_id = serializers.IntegerField(source='user.id', read_only=True)
     room_id = serializers.IntegerField(source='room.user_room_id', read_only=True, allow_null=True)
 
     class Meta:
         model = UploadedFile
-        fields = ['id', 'user_id', 'file', 'file_url', 'file_name', 'ai_response', 'created_at', 'room_id', 'result_json']
-        read_only_fields = ['id', 'user_id', 'file_url', 'file_name', 'created_at', 'room_id']
+        fields = ['id', 'user_id', 'file', 'created_at', 'room_id']
+        read_only_fields = ['id', 'user_id', 'created_at', 'room_id']
 
     def get_file_url(self, obj):
         return obj.file.url if obj.file else None
