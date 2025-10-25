@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ثبت‌نام</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-purple-400 to-pink-600 flex items-center justify-center min-h-screen">
+
+   
+    <div id="errorMessage" class="hidden fixed top-5 left-1/2 transform -translate-x-1/2 bg-red-500/80 text-white px-6 py-3 rounded-lg shadow-lg text-center z-50 transition-opacity duration-500 opacity-0">
+        خطا
+    </div>
+
+    <div class="bg-white/30 backdrop-blur-md p-8 rounded-xl shadow-lg w-full max-w-md border border-white/20">
+        <h2 class="text-3xl font-bold text-center mb-6">ثبت‌نام</h2>
+        <form id="signupForm" class="space-y-4">
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 py-1">ایمیل</label>
+                <input type="email" id="email" required class="bg-white/20 backdrop-blur-md p-4 rounded-xl shadow-md w-full border border-white/20" placeholder="ایمیل خود را وارد کنید">
+            </div>
+            <div>
+                <label for="username" class="block text-sm font-medium text-gray-700 py-1">نام کاربری</label>
+                <input type="text" id="username" required class="bg-white/20 backdrop-blur-md p-4 rounded-xl shadow-md w-full border border-white/20" placeholder="نام کاربری خود را وارد کنید">
+            </div>
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 py-1">رمز عبور</label>
+                <input type="password" id="password" required class="bg-white/20 backdrop-blur-md p-4 rounded-xl shadow-md w-full border border-white/20" placeholder="رمز عبور خود را وارد کنید">
+            </div>
+            <div>
+                <label for="confirm_password" class="block text-sm font-medium text-gray-700 py-1">تأیید رمز عبور</label>
+                <input type="password" id="confirm_password" required class="bg-white/20 backdrop-blur-md p-4 rounded-xl shadow-md w-full border border-white/20" placeholder="رمز عبور را تأیید کنید">
+            </div>
+            <div class="flex items-center justify-between">
+                <button type="submit" class="w-full bg-blue-500/40 backdrop-blur-sm text-white py-3 rounded-md shadow-md flex items-center justify-center transition-all duration-700 ease-in-out hover:bg-blue-500/60 hover:shadow-lg">
+                    ثبت‌نام
+                </button>
+            </div>
+        </form>
+        <div class="text-center mt-4">
+            <p class="text-sm text-gray-600">حساب کاربری دارید؟ <a href="./login_fa.html" class="text-indigo-600 hover:text-indigo-500">ورود</a></p>
+        </div>
+    </div>
+
+   <script>
+    const API_BASE = "http://127.0.0.1:8000/api/auth";
+
+    const showError = (message) => {
+        const errorDiv = document.getElementById('errorMessage');
+        errorDiv.textContent = message;
+        errorDiv.classList.remove('hidden', 'opacity-0');
+        setTimeout(() => errorDiv.classList.add('opacity-100'), 10);
+
+        setTimeout(() => {
+            errorDiv.classList.remove('opacity-100');
+            errorDiv.classList.add('opacity-0');
+            setTimeout(() => errorDiv.classList.add('hidden'), 500);
+        }, 3000);
+    };
+
+    document.getElementById('signupForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const email = document.getElementById('email').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+
+        if (password !== confirmPassword) {
+            showError("رمزهای عبور مطابقت ندارند!");
+            return;
+        }
+
+        try {
+           
+            const signupRes = await fetch(`${API_BASE}/register/`, { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, username, password })
+            });
+            const signupData = await signupRes.json();
+
+            if (!signupRes.ok) {
+                showError(signupData.detail || "خطا در ثبت‌نام!");
+                return;
+            }
+
+            
+            const loginRes = await fetch(`${API_BASE}/login/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })  
+            });
+            const loginData = await loginRes.json();
+
+            if (loginRes.ok) {
+                
+                localStorage.setItem('access', loginData.access);
+                localStorage.setItem('refresh', loginData.refresh);
+                alert("ثبت‌نام و ورود با موفقیت انجام شد!");
+                
+                window.location.href = "./panel.html";
+            } else {
+                showError(loginData.detail || "ورود خودکار انجام نشد، لطفاً وارد شوید.");
+            }
+
+        } catch (error) {
+            console.error("خطا:", error);
+            showError("خطا در اتصال به سرور!");
+        }
+    });
+</script>
+
+
+</body>
+</html>

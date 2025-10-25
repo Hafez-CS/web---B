@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ورود</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-purple-400 to-pink-600 flex items-center justify-center min-h-screen">
+
+    
+    <div id="errorMessage" class="hidden fixed top-5 left-1/2 transform -translate-x-1/2 bg-red-500/80 text-white px-6 py-3 rounded-lg shadow-lg text-center z-50 transition-opacity duration-500 opacity-0">
+        خطا
+    </div>
+
+    
+    <div class="bg-white/30 backdrop-blur-md p-8 rounded-xl shadow-lg w-full max-w-md border border-white/20">
+        <h2 class="text-3xl font-bold text-center mb-6">ورود</h2>
+        <form id="loginForm" class="space-y-4">
+
+            
+            <div>
+                <label for="username" class="block text-sm font-medium text-gray-700 py-1">نام کاربری</label>
+                <input type="text" id="username" class="bg-white/20 backdrop-blur-md p-5 rounded-xl shadow-lg w-full border border-white/20" placeholder="نام کاربری خود را وارد کنید (اختیاری)">
+            </div>
+
+            
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 py-1">ایمیل</label>
+                <input type="email" id="email" class="bg-white/20 backdrop-blur-md p-5 rounded-xl shadow-lg w-full border border-white/20" placeholder="ایمیل خود را وارد کنید (اختیاری)">
+            </div>
+
+            
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 py-1">رمز عبور</label>
+                <input type="password" id="password" required class="bg-white/20 backdrop-blur-md p-5 rounded-xl shadow-lg w-full border border-white/20" placeholder="رمز عبور خود را وارد کنید">
+            </div>
+
+            <div class="flex items-center justify-between">
+                <button type="submit" class="w-full bg-blue-500/40 backdrop-blur-sm text-white py-3 rounded-md shadow-md flex items-center justify-center transition-all duration-700 ease-in-out hover:bg-blue-500/60 hover:shadow-lg">
+                    ورود
+                </button>
+            </div>
+        </form>
+
+        
+        <div class="text-center mt-2">
+            <a href="./password_reset_fa.html" class="text-blue-900 hover:text-blue-700 transition-colors duration-300">
+                رمز عبور را فراموش کرده‌اید؟
+            </a>
+        </div>
+
+        
+        <div class="text-center mt-4">
+            <p class="text-sm text-gray-600">
+                حساب کاربری ندارید؟ 
+                <a href="./signup_fa.html" class="text-indigo-600 hover:text-indigo-500">ثبت‌نام کنید</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://127.0.0.1:8000/api";
+
+        const showError = (message) => {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden', 'opacity-0');
+            setTimeout(() => errorDiv.classList.add('opacity-100'), 10);
+
+            setTimeout(() => {
+                errorDiv.classList.remove('opacity-100');
+                errorDiv.classList.add('opacity-0');
+                setTimeout(() => errorDiv.classList.add('hidden'), 500);
+            }, 3000);
+        };
+
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username && !email) {
+                showError("لطفاً نام کاربری یا ایمیل خود را وارد کنید!");
+                return;
+            }
+
+            
+            const payload = username ? { username, password } : { email, password };
+
+            try {
+                const response = await fetch(`${API_BASE}/token/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('access', data.access);
+                    localStorage.setItem('refresh', data.refresh);
+                    alert("ورود موفق!");
+                    
+                    window.location.href = "./dashboard.html";
+                } else {
+                    showError(data.detail || "نام کاربری، ایمیل یا رمز عبور اشتباه است!");
+                }
+            } catch (error) {
+                console.error("خطا:", error);
+                showError("خطا در اتصال به سرور!");
+            }
+        });
+    </script>
+
+</body>
+</html>

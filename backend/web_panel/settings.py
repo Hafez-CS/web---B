@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'profile_panel',
     'rest_framework_simplejwt',
     'chat.apps.ChatConfig',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
@@ -53,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'web_panel.urls'
@@ -172,3 +174,8 @@ CHANNEL_LAYERS = {
     },
 }
 
+
+
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:5500",
+]
