@@ -8,29 +8,24 @@
 </head>
 <body class="bg-gradient-to-r from-purple-400 to-pink-600 flex items-center justify-center min-h-screen">
 
-    
     <div id="errorMessage" class="hidden fixed top-5 left-1/2 transform -translate-x-1/2 bg-red-500/80 text-white px-6 py-3 rounded-lg shadow-lg text-center z-50 transition-opacity duration-500 opacity-0">
         خطا
     </div>
 
-    
     <div class="bg-white/30 backdrop-blur-md p-8 rounded-xl shadow-lg w-full max-w-md border border-white/20">
         <h2 class="text-3xl font-bold text-center mb-6">ورود</h2>
         <form id="loginForm" class="space-y-4">
 
-            
             <div>
                 <label for="username" class="block text-sm font-medium text-gray-700 py-1">نام کاربری</label>
                 <input type="text" id="username" class="bg-white/20 backdrop-blur-md p-5 rounded-xl shadow-lg w-full border border-white/20" placeholder="نام کاربری خود را وارد کنید (اختیاری)">
             </div>
 
-            
             <div>
                 <label for="email" class="block text-sm font-medium text-gray-700 py-1">ایمیل</label>
                 <input type="email" id="email" class="bg-white/20 backdrop-blur-md p-5 rounded-xl shadow-lg w-full border border-white/20" placeholder="ایمیل خود را وارد کنید (اختیاری)">
             </div>
 
-            
             <div>
                 <label for="password" class="block text-sm font-medium text-gray-700 py-1">رمز عبور</label>
                 <input type="password" id="password" required class="bg-white/20 backdrop-blur-md p-5 rounded-xl shadow-lg w-full border border-white/20" placeholder="رمز عبور خود را وارد کنید">
@@ -43,14 +38,12 @@
             </div>
         </form>
 
-        
         <div class="text-center mt-2">
             <a href="./password_reset_fa.html" class="text-blue-900 hover:text-blue-700 transition-colors duration-300">
                 رمز عبور را فراموش کرده‌اید؟
             </a>
         </div>
 
-        
         <div class="text-center mt-4">
             <p class="text-sm text-gray-600">
                 حساب کاربری ندارید؟ 
@@ -87,7 +80,6 @@
                 return;
             }
 
-            
             const payload = username ? { username, password } : { email, password };
 
             try {
@@ -100,11 +92,14 @@
                 const data = await response.json();
 
                 if (response.ok) {
+                    // ذخیره توکن‌ها
                     localStorage.setItem('access', data.access);
                     localStorage.setItem('refresh', data.refresh);
-                    alert("ورود موفق!");
-                    
-                    window.location.href = "./dashboard.html";
+                    console.log("Access Token:", data.access);
+                    console.log("Refresh Token:", data.refresh);
+
+                    // هدایت به صفحه چت
+                    window.location.href = "./chatbot.html";
                 } else {
                     showError(data.detail || "نام کاربری، ایمیل یا رمز عبور اشتباه است!");
                 }
@@ -114,6 +109,5 @@
             }
         });
     </script>
-
 </body>
 </html>

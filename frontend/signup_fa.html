@@ -8,7 +8,6 @@
 </head>
 <body class="bg-gradient-to-r from-purple-400 to-pink-600 flex items-center justify-center min-h-screen">
 
-   
     <div id="errorMessage" class="hidden fixed top-5 left-1/2 transform -translate-x-1/2 bg-red-500/80 text-white px-6 py-3 rounded-lg shadow-lg text-center z-50 transition-opacity duration-500 opacity-0">
         خطا
     </div>
@@ -43,75 +42,75 @@
         </div>
     </div>
 
-   <script>
-    const API_BASE = "http://127.0.0.1:8000/api/auth";
+    <script>
+        const API_AUTH = "http://127.0.0.1:8000/api/auth";
+        const API_TOKEN = "http://127.0.0.1:8000/api/token/"; // مسیر درست برای JWT
+        const CHAT_URL = "http://127.0.0.1:3000/chatbot.html";
 
-    const showError = (message) => {
-        const errorDiv = document.getElementById('errorMessage');
-        errorDiv.textContent = message;
-        errorDiv.classList.remove('hidden', 'opacity-0');
-        setTimeout(() => errorDiv.classList.add('opacity-100'), 10);
+        const showError = (message) => {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden', 'opacity-0');
+            setTimeout(() => errorDiv.classList.add('opacity-100'), 10);
+            setTimeout(() => {
+                errorDiv.classList.remove('opacity-100');
+                errorDiv.classList.add('opacity-0');
+                setTimeout(() => errorDiv.classList.add('hidden'), 500);
+            }, 3000);
+        };
 
-        setTimeout(() => {
-            errorDiv.classList.remove('opacity-100');
-            errorDiv.classList.add('opacity-0');
-            setTimeout(() => errorDiv.classList.add('hidden'), 500);
-        }, 3000);
-    };
+        document.getElementById('signupForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
 
-    document.getElementById('signupForm').addEventListener('submit', async function(event) {
-        event.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
 
-        const email = document.getElementById('email').value;
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirm_password').value;
-
-        if (password !== confirmPassword) {
-            showError("رمزهای عبور مطابقت ندارند!");
-            return;
-        }
-
-        try {
-           
-            const signupRes = await fetch(`${API_BASE}/register/`, { 
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, username, password })
-            });
-            const signupData = await signupRes.json();
-
-            if (!signupRes.ok) {
-                showError(signupData.detail || "خطا در ثبت‌نام!");
+            if (password !== confirmPassword) {
+                showError("رمزهای عبور مطابقت ندارند!");
                 return;
             }
 
-            
-            const loginRes = await fetch(`${API_BASE}/login/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })  
-            });
-            const loginData = await loginRes.json();
+            try {
+                // ثبت‌نام
+                const signupRes = await fetch(`${API_AUTH}/register/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, username, password })
+                });
+                const signupData = await signupRes.json();
 
-            if (loginRes.ok) {
-                
-                localStorage.setItem('access', loginData.access);
-                localStorage.setItem('refresh', loginData.refresh);
-                alert("ثبت‌نام و ورود با موفقیت انجام شد!");
-                
-                window.location.href = "./panel.html";
-            } else {
-                showError(loginData.detail || "ورود خودکار انجام نشد، لطفاً وارد شوید.");
+                if (!signupRes.ok) {
+                    showError(signupData.detail || "خطا در ثبت‌نام!");
+                    return;
+                }
+
+                // ورود خودکار بعد از ثبت‌نام
+                const loginRes = await fetch(API_TOKEN, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const loginData = await loginRes.json();
+
+                if (loginRes.ok) {
+                    console.log("✅ ورود خودکار موفق:", loginData);
+                    localStorage.setItem('access', loginData.access);
+                    localStorage.setItem('refresh', loginData.refresh);
+                    window.location.replace(CHAT_URL);
+                } else {
+                    console.log("❌ ورود خودکار ناموفق:", loginData);
+                    showError(loginData.detail || "ورود خودکار انجام نشد، لطفاً وارد شوید.");
+                }
+
+            } catch (error) {
+                console.error("🔥 خطا در ارتباط با سرور:", error);
+                showError("خطا در اتصال به سرور!");
             }
-
-        } catch (error) {
-            console.error("خطا:", error);
-            showError("خطا در اتصال به سرور!");
-        }
-    });
-</script>
-
+        });
+    </script>
 
 </body>
 </html>
