@@ -80,24 +80,32 @@ let roomId = null;
 const API_BASE = "http://127.0.0.1:8000/api";
 const token = localStorage.getItem('access');
 
+
 function showError(msg) {
   errorMessage.textContent = msg;
   errorMessage.classList.remove('hidden');
   setTimeout(() => errorMessage.classList.add('hidden'), 5000);
 }
 
+
 function toggleLoading(show) {
   loading.classList[show ? 'remove' : 'add']('hidden');
 }
 
-function addMessage(content, isUser=false) {
+
+function addMessage(content, isUser = false) {
   const div = document.createElement('div');
   div.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
-  div.innerHTML = `<div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${isUser ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800 glass'}">${content}</div>`;
+  div.innerHTML = `
+    <div class="max-w-full lg:max-w-2xl px-4 py-3 rounded-xl
+      ${isUser ? 'bg-indigo-600 text-white self-end' : 'bg-gray-200 text-gray-900 glass'}">
+      ${content}
+    </div>`;
   chatContainer.appendChild(div);
   chatContainer.scrollTop = chatContainer.scrollHeight;
   return div.querySelector('div');
 }
+
 
 async function initRoom() {
   toggleLoading(true);
@@ -117,53 +125,61 @@ async function initRoom() {
       roomId = newRoom.user_room_id;
       addMessage(`اتاق جدید ساخته شد: ${newRoom.name}`);
     }
-  } catch(e) {
+  } catch (e) {
     console.error(e);
     showError("خطا در بارگذاری روم‌ها");
   }
   toggleLoading(false);
 }
 
+
 async function loadHistory() {
-  if(!roomId) return;
+  if (!roomId) return;
   try {
     const res = await fetch(`${API_BASE}/chat/rooms/${roomId}/messages/`, { headers: { 'Authorization': `Bearer ${token}` } });
     const data = await res.json();
     data.timeline.forEach(item => {
-      if(item.type === 'message') addMessage(`${item.user_message}: ${item.ai_response || ''}`, item.user_message !== undefined);
-      if(item.type === 'file') addMessage(`فایل: ${item.file}`);
+      if (item.type === 'message') addMessage(`${item.user_message}: ${item.ai_response || ''}`, item.user_message !== undefined);
+      if (item.type === 'file') addMessage(`فایل: ${item.file}`);
     });
-  } catch(e) { console.error(e); }
+  } catch (e) {
+    console.error(e);
+  }
 }
+
 
 async function sendMessage() {
   const text = messageInput.value.trim();
-  if(!text || !roomId) return;
+  if (!text || !roomId) return;
   addMessage(text, true);
   messageInput.value = '';
   toggleLoading(true);
   try {
     const res = await fetch(`${API_BASE}/chat/rooms/${roomId}/messages/`, {
       method: 'POST',
-      headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({ user_message: text })
     });
     const data = await res.json();
     toggleLoading(false);
-    if(res.ok) addMessage(`${data.ai_response}`);
+    if (res.ok) addMessage(`${data.ai_response}`);
     else showError(data.error || 'خطا در ارسال پیام');
-  } catch(e) {
+  } catch (e) {
     toggleLoading(false);
     showError('خطا در ارتباط با سرور');
     console.error(e);
   }
 }
 
-// 📊 تابع رسم نمودار در پیام چت
+
 function drawChartInChat(predictionData) {
-  const container = addMessage(`<canvas height="150"></canvas>`);
+  const container = addMessage(`<div class="chart-wrapper"><canvas></canvas></div>`);
   const canvas = container.querySelector('canvas');
   const ctx = canvas.getContext('2d');
+
+ 
+  canvas.width = 900;
+  canvas.height = 450;
 
   const actual = predictionData.actual_values || [];
   const predicted = predictionData.predicted_values || [];
@@ -171,8 +187,9 @@ function drawChartInChat(predictionData) {
 
   const historicalLength = predicted.length;
   const totalLength = historicalLength + future.length;
-  const labels = Array.from({length: totalLength}, (_, i) => i);
+  const labels = Array.from({ length: totalLength }, (_, i) => i + 1);
 
+  
   const futureDataWithNulls = new Array(historicalLength - 1).fill(null).concat([
     predicted[historicalLength - 1],
     ...future
@@ -183,23 +200,95 @@ function drawChartInChat(predictionData) {
     data: {
       labels,
       datasets: [
-        { label: 'Actual', data: actual, borderColor: '#1f77b4', borderWidth: 2, pointRadius: 0 },
-        { label: 'Predicted', data: predicted, borderColor: '#ff7f0e', borderWidth: 2, pointRadius: 0 },
-        { label: 'Future', data: futureDataWithNulls, borderColor: '#2ca02c', borderDash: [6,6], borderWidth: 2, pointRadius: 0 }
+        {
+          label: 'واقعی',
+          data: actual,
+          borderColor: 'rgba(75,192,192,1)',
+          borderWidth: 3,
+          tension: 0.35,
+          fill: false,
+          pointRadius: 4,
+          pointHoverRadius: 7,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: 'rgba(75,192,192,1)',
+        },
+        {
+          label: 'پیش‌بینی‌شده',
+          data: predicted,
+          borderColor: 'rgba(255,99,132,1)',
+          borderWidth: 3,
+          tension: 0.35,
+          fill: false,
+          pointRadius: 4,
+          pointHoverRadius: 7,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: 'rgba(255,99,132,1)',
+        },
+        {
+          label: 'پیش‌بینی آینده',
+          data: futureDataWithNulls,
+          borderColor: 'rgba(255,206,86,1)',
+          borderWidth: 3,
+          borderDash: [6, 6],
+          tension: 0.35,
+          fill: false,
+          pointRadius: 4,
+          pointHoverRadius: 7,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: 'rgba(255,206,86,1)',
+        }
       ]
     },
     options: {
       responsive: true,
-      plugins: { legend: { position: 'bottom' } },
-      scales: { x: { display: true }, y: { display: true } },
-      elements: { line: { tension: 0.2 } }
+      maintainAspectRatio: false,
+      interaction: { mode: 'nearest', intersect: true },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: '#000', font: { size: 13, weight: 'bold' } }
+        },
+        tooltip: {
+          enabled: true,
+          backgroundColor: 'rgba(0,0,0,0.85)',
+          titleFont: { size: 14, weight: 'bold' },
+          bodyFont: { size: 13 },
+          padding: 10,
+          displayColors: true,
+          callbacks: {
+            title: ctx => `اندیس: ${ctx[0].label}`,
+            label: ctx => `${ctx.dataset.label}: ${ctx.formattedValue}`
+          }
+        },
+        title: {
+          display: true,
+          text: 'نمودار خطی پیش‌بینی داده‌ها',
+          color: '#000',
+          font: { size: 18, weight: 'bold' }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'اندیس داده‌ها', color: '#333' },
+          ticks: { color: '#333' },
+          grid: { color: 'rgba(0,0,0,0.05)' }
+        },
+        y: {
+          title: { display: true, text: 'مقدار', color: '#333' },
+          ticks: { color: '#333' },
+          grid: { color: 'rgba(0,0,0,0.05)' }
+        }
+      },
+      animation: { duration: 1500, easing: 'easeInOutQuart' },
+      hover: { mode: 'nearest', intersect: true }
     }
   });
 }
 
+
 fileUpload.addEventListener('change', async e => {
   const file = e.target.files[0];
-  if(!file || !roomId) return;
+  if (!file || !roomId) return;
   addMessage(`آپلود فایل: ${file.name}`, true);
   const formData = new FormData();
   formData.append('file', file);
@@ -212,9 +301,9 @@ fileUpload.addEventListener('change', async e => {
     });
     const data = await res.json();
     toggleLoading(false);
-    if(data.success) {
+    if (data.success) {
       addMessage(`فایل "${file.name}" آپلود شد ✅`);
-      if(data.analysis_result.prediction_data) {
+      if (data.analysis_result.prediction_data) {
         drawChartInChat(data.analysis_result.prediction_data);
       } else {
         addMessage(`تحلیلی یافت نشد.`);
@@ -222,15 +311,17 @@ fileUpload.addEventListener('change', async e => {
     } else {
       showError(data.error || 'خطا در پردازش فایل');
     }
-  } catch(e) {
+  } catch (e) {
     toggleLoading(false);
     showError('خطا در ارتباط با سرور');
     console.error(e);
   }
 });
 
+
 sendBtn.addEventListener('click', sendMessage);
-messageInput.addEventListener('keypress', e => { if(e.key==='Enter') sendMessage(); });
+messageInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+
 
 window.addEventListener('DOMContentLoaded', async () => {
   await initRoom();
@@ -238,5 +329,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   addMessage('سلام! فایل CSV یا Excel آپلود کنید تا نمودارش رو ببینید 📊');
 });
 </script>
+
+
 </body>
 </html>

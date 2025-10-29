@@ -92,13 +92,13 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    // ذخیره توکن‌ها
+                    
                     localStorage.setItem('access', data.access);
                     localStorage.setItem('refresh', data.refresh);
                     console.log("Access Token:", data.access);
                     console.log("Refresh Token:", data.refresh);
 
-                    // هدایت به صفحه چت
+                    
                     window.location.href = "./chatbot.html";
                 } else {
                     showError(data.detail || "نام کاربری، ایمیل یا رمز عبور اشتباه است!");

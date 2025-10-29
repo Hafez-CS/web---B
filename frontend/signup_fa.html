@@ -44,7 +44,7 @@
 
     <script>
         const API_AUTH = "http://127.0.0.1:8000/api/auth";
-        const API_TOKEN = "http://127.0.0.1:8000/api/token/"; // مسیر درست برای JWT
+        const API_TOKEN = "http://127.0.0.1:8000/api/token/"; 
         const CHAT_URL = "http://127.0.0.1:3000/chatbot.html";
 
         const showError = (message) => {
@@ -73,7 +73,7 @@
             }
 
             try {
-                // ثبت‌نام
+                
                 const signupRes = await fetch(`${API_AUTH}/register/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -86,7 +86,7 @@
                     return;
                 }
 
-                // ورود خودکار بعد از ثبت‌نام
+                
                 const loginRes = await fetch(API_TOKEN, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
