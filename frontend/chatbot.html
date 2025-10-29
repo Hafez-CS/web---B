@@ -1,78 +1,71 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>چت</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <style>
-        body {
-            background: linear-gradient(45deg, rgb(255, 0, 0), rgb(0, 255, 0), rgb(0, 0, 255));
-            background-size: 600%;
-            animation: colorChange 15s ease infinite;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 2rem;
-        }
-        @keyframes colorChange {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-        }
-        #chatContainer div {
-            transition: background 0.3s;
-        }
-        #messageInput {
-            width: 100%;
-            padding: 0.5rem;
-            border-radius: 0.5rem;
-            border: 1px solid #ccc;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>چت + نمودار</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body {
+      background: linear-gradient(
+        135deg,
+        rgba(18, 62, 255, 0.736) 0%, 
+        rgba(133, 33, 255, 0.788) 100% 
+    );
+      background-size: 600%;
+      animation: colorChange 15s ease infinite;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 2rem;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 10px;
+    }
+    #messageInput {
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      border: 1px solid #ccc;
+    }
+    canvas {
+      max-width: 100%;
+    }
+  </style>
 </head>
 <body>
 
 <header class="glass w-full max-w-3xl shadow-md p-4 mb-4">
-    <h1 class="text-2xl font-bold text-center text-black">چت</h1>
+  <h1 class="text-2xl font-bold text-center text-black">چت + نمودار</h1>
 </header>
 
-<div id="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4 w-full max-w-3xl glass mb-4" style="height: 400px;">
-</div>
+<div id="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4 w-full max-w-3xl glass mb-4" style="height: 400px;"></div>
 
-<div class="glass flex w-full max-w-3xl mb-2 p-2 rounded-xl shadow-lg items-center space-x-2
-            bg-white/20 backdrop-blur-md border border-white/30">
-    <input id="messageInput" type="text" placeholder="پیام خود را بنویسید..."
-        class="flex-1 px-4 py-2 rounded-lg bg-white/30 text-gray-900 placeholder-gray-700
-               focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:bg-white/50
-               transition duration-300 ease-in-out"/>
-    <button id="sendBtn"
-        class="px-5 py-2 rounded-lg bg-indigo-600 text-white font-semibold
-               shadow-md hover:bg-indigo-700 hover:scale-105 transition
-               duration-200 ease-in-out active:scale-95">
-        ارسال
-    </button>
+<div class="glass flex w-full max-w-3xl mb-2 p-2 rounded-xl shadow-lg items-center space-x-2 bg-white/20 backdrop-blur-md border border-white/30">
+  <input id="messageInput" type="text" placeholder="پیام خود را بنویسید..."
+    class="flex-1 px-4 py-2 rounded-lg bg-white/30 text-gray-900 placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:bg-white/50 transition duration-300 ease-in-out"/>
+  <button id="sendBtn"
+    class="px-5 py-2 rounded-lg bg-indigo-600 text-white font-semibold shadow-md hover:bg-indigo-700 hover:scale-105 transition duration-200 ease-in-out active:scale-95">
+    ارسال
+  </button>
 </div>
-
 
 <div class="glass p-4 w-full max-w-3xl mb-8">
-    <div class="flex justify-center">
-        <input type="file" id="fileUpload" accept=".csv,.xlsx,.xls" class="hidden">
-        <label for="fileUpload" class="bg-indigo-600 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-indigo-700">
-            آپلود فایل (CSV/Excel)
-        </label>
-    </div>
-    <div id="errorMessage" class="text-red-600 text-sm mt-2 hidden"></div>
-    <div id="loading" class="text-gray-800 text-sm mt-2 hidden">در حال بارگذاری...</div>
+  <div class="flex justify-center">
+    <input type="file" id="fileUpload" accept=".csv,.xlsx,.xls" class="hidden">
+    <label for="fileUpload" class="bg-indigo-600 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-indigo-700">
+      آپلود فایل (CSV/Excel)
+    </label>
+  </div>
+  <div id="errorMessage" class="text-red-600 text-sm mt-2 hidden"></div>
+  <div id="loading" class="text-gray-800 text-sm mt-2 hidden">در حال بارگذاری...</div>
 </div>
 
 <script>
@@ -88,129 +81,162 @@ const API_BASE = "http://127.0.0.1:8000/api";
 const token = localStorage.getItem('access');
 
 function showError(msg) {
-    errorMessage.textContent = msg;
-    errorMessage.classList.remove('hidden');
-    setTimeout(() => errorMessage.classList.add('hidden'), 5000);
+  errorMessage.textContent = msg;
+  errorMessage.classList.remove('hidden');
+  setTimeout(() => errorMessage.classList.add('hidden'), 5000);
 }
 
 function toggleLoading(show) {
-    loading.classList[show ? 'remove' : 'add']('hidden');
+  loading.classList[show ? 'remove' : 'add']('hidden');
 }
 
 function addMessage(content, isUser=false) {
-    const div = document.createElement('div');
-    div.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
-    div.innerHTML = `<div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${isUser ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800 glass'}">${content}</div>`;
-    chatContainer.appendChild(div);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+  const div = document.createElement('div');
+  div.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
+  div.innerHTML = `<div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${isUser ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800 glass'}">${content}</div>`;
+  chatContainer.appendChild(div);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+  return div.querySelector('div');
 }
-
 
 async function initRoom() {
-    toggleLoading(true);
-    try {
-        const res = await fetch(`${API_BASE}/chat/rooms/`, { headers: { 'Authorization': `Bearer ${token}` } });
-        const rooms = await res.json();
-        if (rooms.length > 0) {
-            roomId = rooms[0].user_room_id;
-            addMessage(`اتاق شما: ${rooms[0].name}`, false);
-        } else {
-            const createRes = await fetch(`${API_BASE}/chat/rooms/create/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ name: "چت جدید" })
-            });
-            const newRoom = await createRes.json();
-            roomId = newRoom.user_room_id;
-            addMessage(`اتاق جدید ساخته شد: ${newRoom.name}`, false);
-        }
-    } catch(e) {
-        console.error(e);
-        showError("خطا در بارگذاری روم‌ها");
+  toggleLoading(true);
+  try {
+    const res = await fetch(`${API_BASE}/chat/rooms/`, { headers: { 'Authorization': `Bearer ${token}` } });
+    const rooms = await res.json();
+    if (rooms.length > 0) {
+      roomId = rooms[0].user_room_id;
+      addMessage(`اتاق شما: ${rooms[0].name}`);
+    } else {
+      const createRes = await fetch(`${API_BASE}/chat/rooms/create/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ name: "چت جدید" })
+      });
+      const newRoom = await createRes.json();
+      roomId = newRoom.user_room_id;
+      addMessage(`اتاق جدید ساخته شد: ${newRoom.name}`);
     }
-    toggleLoading(false);
+  } catch(e) {
+    console.error(e);
+    showError("خطا در بارگذاری روم‌ها");
+  }
+  toggleLoading(false);
 }
-
 
 async function loadHistory() {
-    if(!roomId) return;
-    try {
-        const res = await fetch(`${API_BASE}/chat/rooms/${roomId}/messages/`, { headers: { 'Authorization': `Bearer ${token}` } });
-        const data = await res.json();
-        data.timeline.forEach(item => {
-            if(item.type === 'message') addMessage(`${item.user_message}: ${item.ai_response || ''}`, item.user_message !== undefined);
-            if(item.type === 'file') addMessage(`فایل: ${item.file}`, false);
-        });
-    } catch(e) { console.error(e); }
+  if(!roomId) return;
+  try {
+    const res = await fetch(`${API_BASE}/chat/rooms/${roomId}/messages/`, { headers: { 'Authorization': `Bearer ${token}` } });
+    const data = await res.json();
+    data.timeline.forEach(item => {
+      if(item.type === 'message') addMessage(`${item.user_message}: ${item.ai_response || ''}`, item.user_message !== undefined);
+      if(item.type === 'file') addMessage(`فایل: ${item.file}`);
+    });
+  } catch(e) { console.error(e); }
 }
-
 
 async function sendMessage() {
-    const text = messageInput.value.trim();
-    if(!text || !roomId) return;
-    addMessage(text, true);
-    messageInput.value = '';
-    toggleLoading(true);
-    try {
-        const res = await fetch(`${API_BASE}/chat/rooms/${roomId}/messages/`, {
-            method: 'POST',
-            headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ user_message: text })
-        });
-        const data = await res.json();
-        toggleLoading(false);
-        if(res.ok) {
-            addMessage(`${data.ai_response}`, false);
-        } else {
-            showError(data.error || 'خطا در ارسال پیام');
-        }
-    } catch(e) {
-        toggleLoading(false);
-        showError('خطا در ارتباط با سرور');
-        console.error(e);
-    }
+  const text = messageInput.value.trim();
+  if(!text || !roomId) return;
+  addMessage(text, true);
+  messageInput.value = '';
+  toggleLoading(true);
+  try {
+    const res = await fetch(`${API_BASE}/chat/rooms/${roomId}/messages/`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ user_message: text })
+    });
+    const data = await res.json();
+    toggleLoading(false);
+    if(res.ok) addMessage(`${data.ai_response}`);
+    else showError(data.error || 'خطا در ارسال پیام');
+  } catch(e) {
+    toggleLoading(false);
+    showError('خطا در ارتباط با سرور');
+    console.error(e);
+  }
 }
 
+// 📊 تابع رسم نمودار در پیام چت
+function drawChartInChat(predictionData) {
+  const container = addMessage(`<canvas height="150"></canvas>`);
+  const canvas = container.querySelector('canvas');
+  const ctx = canvas.getContext('2d');
+
+  const actual = predictionData.actual_values || [];
+  const predicted = predictionData.predicted_values || [];
+  const future = predictionData.future_predictions || [];
+
+  const historicalLength = predicted.length;
+  const totalLength = historicalLength + future.length;
+  const labels = Array.from({length: totalLength}, (_, i) => i);
+
+  const futureDataWithNulls = new Array(historicalLength - 1).fill(null).concat([
+    predicted[historicalLength - 1],
+    ...future
+  ]);
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Actual', data: actual, borderColor: '#1f77b4', borderWidth: 2, pointRadius: 0 },
+        { label: 'Predicted', data: predicted, borderColor: '#ff7f0e', borderWidth: 2, pointRadius: 0 },
+        { label: 'Future', data: futureDataWithNulls, borderColor: '#2ca02c', borderDash: [6,6], borderWidth: 2, pointRadius: 0 }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom' } },
+      scales: { x: { display: true }, y: { display: true } },
+      elements: { line: { tension: 0.2 } }
+    }
+  });
+}
 
 fileUpload.addEventListener('change', async e => {
-    const file = e.target.files[0];
-    if(!file || !roomId) return;
-    addMessage(`آپلود فایل: ${file.name}`, true);
-    const formData = new FormData();
-    formData.append('file', file);
-    toggleLoading(true);
-    try {
-        const res = await fetch(`${API_BASE}/chat/rooms/${roomId}/upload/`, {
-            method: 'POST',
-            body: formData,
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await res.json();
-        toggleLoading(false);
-        if(data.success) {
-            addMessage(`فایل "${file.name}" آپلود شد. پیام تحلیل: ${data.analysis_result.message || 'بدون پیام'}`, false);
-            if(data.analysis_result.prediction_data) {
-                addMessage(`<pre class="whitespace-pre-wrap text-xs">${JSON.stringify(data.analysis_result.prediction_data,null,2)}</pre>`, false);
-            }
-        } else {
-            showError(data.error || 'خطا در پردازش فایل');
-        }
-    } catch(e) {
-        toggleLoading(false);
-        showError('خطا در ارتباط با سرور');
-        console.error(e);
+  const file = e.target.files[0];
+  if(!file || !roomId) return;
+  addMessage(`آپلود فایل: ${file.name}`, true);
+  const formData = new FormData();
+  formData.append('file', file);
+  toggleLoading(true);
+  try {
+    const res = await fetch(`${API_BASE}/chat/rooms/${roomId}/upload/`, {
+      method: 'POST',
+      body: formData,
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    toggleLoading(false);
+    if(data.success) {
+      addMessage(`فایل "${file.name}" آپلود شد ✅`);
+      if(data.analysis_result.prediction_data) {
+        drawChartInChat(data.analysis_result.prediction_data);
+      } else {
+        addMessage(`تحلیلی یافت نشد.`);
+      }
+    } else {
+      showError(data.error || 'خطا در پردازش فایل');
     }
+  } catch(e) {
+    toggleLoading(false);
+    showError('خطا در ارتباط با سرور');
+    console.error(e);
+  }
 });
 
 sendBtn.addEventListener('click', sendMessage);
 messageInput.addEventListener('keypress', e => { if(e.key==='Enter') sendMessage(); });
 
 window.addEventListener('DOMContentLoaded', async () => {
-    await initRoom();
-    await loadHistory();
-    addMessage('سلام! فایل CSV یا Excel آپلود کنید.', false);
+  await initRoom();
+  await loadHistory();
+  addMessage('سلام! فایل CSV یا Excel آپلود کنید تا نمودارش رو ببینید 📊');
 });
 </script>
-
 </body>
 </html>
