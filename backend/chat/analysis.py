@@ -27,9 +27,12 @@ def get_ai_comprehensive_analysis(user_message, ai_response):
         import os
         
         client = OpenAI(
-            api_key=os.getenv('OPENROUTER_API_KEY', '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'),
-            base_url="https://openrouter.ai/api/v1"
+            api_key=os.getenv('OPENROUTER_API_KEY'),
+            base_url=os.getenv('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1')
         )
+        
+        if not os.getenv('OPENROUTER_API_KEY'):
+            raise ValueError('❌ OPENROUTER_API_KEY not found in environment variables')
         
         analysis_prompt = f"""
 تو یک تحلیلگر حرفه‌ای رفتار کاربر هستی. از روی این مکالمه، تحلیل کاملی ارائه بده:
