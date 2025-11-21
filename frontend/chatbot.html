@@ -61,6 +61,19 @@
     .offcanvas {
       width: var(--sidebar-width) !important;
     }
+    .offcanvas .nav-link {
+      color: #fff;
+      text-align: right;
+      background: transparent;
+      border: 1px solid transparent;
+    }
+    .offcanvas .nav-link .menu-text {
+      line-height: 1.3;
+    }
+    .offcanvas .nav-link.active {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
 
     /* Main Content */
     .main-content {
@@ -86,6 +99,45 @@
 
     .text-white-50 { color: rgba(255, 255, 255, 0.5) !important; }
     [data-bs-theme="dark"] .text-white-50 { color: rgba(255, 255, 255, 0.7) !important; }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+    .status-chip i {
+      font-size: 1rem;
+    }
+    .step-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .step-list li {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.9);
+    }
+    .step-list li:last-child {
+      border-bottom: none;
+    }
+    .step-list span {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.75rem;
+      background: rgba(255, 255, 255, 0.15);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -104,14 +156,47 @@
     </div>
     <div class="offcanvas-body p-0">
       <nav class="nav flex-column p-3">
-        <button class="nav-link active text-white px-3 py-2 rounded mb-2 d-flex align-items-center" data-tab="dashboard">
-          <i class="bi bi-speedometer2 me-2"></i> پیشخوان
+        <button class="nav-link text-white px-3 py-3 rounded mb-2 d-flex align-items-start gap-2" data-tab="profile">
+          <i class="bi bi-person fs-5"></i>
+          <div class="menu-text">
+            <span class="fw-semibold d-block">پروفایل</span>
+            <small class="text-white-50">مشاهده و ویرایش مشخصات</small>
+          </div>
         </button>
-        <button class="nav-link text-white px-3 py-2 rounded mb-2 d-flex align-items-center" data-tab="chat">
-          <i class="bi bi-chat-dots me-2"></i> چت + نمودار
+        <button class="nav-link active text-white px-3 py-3 rounded mb-2 d-flex align-items-start gap-2" data-tab="dashboard">
+          <i class="bi bi-speedometer2 fs-5"></i>
+          <div class="menu-text">
+            <span class="fw-semibold d-block">داشبورد</span>
+            <small class="text-white-50">محل اصلی تعامل با سیستم</small>
+          </div>
         </button>
-        <button class="nav-link text-white px-3 py-2 rounded d-flex align-items-center" data-tab="profile">
-          <i class="bi bi-person me-2"></i> پروفایل
+        <button class="nav-link text-white px-3 py-3 rounded mb-2 d-flex align-items-start gap-2" data-tab="assistant">
+          <i class="bi bi-stars fs-5"></i>
+          <div class="menu-text">
+            <span class="fw-semibold d-block">دستیار</span>
+            <small class="text-white-50">ارتباط مستقیم با هوش مصنوعی</small>
+          </div>
+        </button>
+        <button class="nav-link text-white px-3 py-3 rounded mb-2 d-flex align-items-start gap-2" data-tab="services">
+          <i class="bi bi-grid fs-5"></i>
+          <div class="menu-text">
+            <span class="fw-semibold d-block">سرویس‌ها</span>
+            <small class="text-white-50">سرویس‌های فعلی (در حال آماده‌سازی)</small>
+          </div>
+        </button>
+        <button class="nav-link text-white px-3 py-3 rounded mb-2 d-flex align-items-start gap-2" data-tab="economic">
+          <i class="bi bi-graph-up fs-5"></i>
+          <div class="menu-text">
+            <span class="fw-semibold d-block">اقتصادی</span>
+            <small class="text-white-50">پایش وضعیت اقتصادی</small>
+          </div>
+        </button>
+        <button class="nav-link text-white px-3 py-3 rounded d-flex align-items-start gap-2" data-tab="settings">
+          <i class="bi bi-gear fs-5"></i>
+          <div class="menu-text">
+            <span class="fw-semibold d-block">تنظیمات</span>
+            <small class="text-white-50">تم سیستم و مدیریت خروج</small>
+          </div>
         </button>
       </nav>
     </div>
@@ -127,18 +212,15 @@
           <button class="btn btn-outline-light" data-bs-toggle="offcanvas" data-bs-target="#sidebar">
             <i class="bi bi-list"></i>
           </button>
-          <h1 class="h4 mb-0 text-white">پنل کاربری</h1>
-        </div>
-        <div class="d-flex align-items-center gap-3">
-          <!-- Dark Mode -->
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="darkModeSwitch">
-            <label class="form-check-label text-white small" for="darkModeSwitch">
-              <i class="bi bi-moon-stars-fill"></i>
-            </label>
+          <div>
+            <h1 class="h4 mb-0 text-white">کنترل‌پنل مالی</h1>
+            <p class="text-white-50 small mb-0">اطلاعات مالی، دستیار و تنظیمات در یک نما</p>
           </div>
-          <button class="btn btn-danger btn-sm" id="logoutBtn">خروج</button>
         </div>
+        <span class="status-chip">
+          <i class="bi bi-lightning-charge-fill"></i>
+          آماده تحلیل مالی شما
+        </span>
       </div>
     </header>
 
@@ -147,25 +229,89 @@
 
       <!-- Dashboard -->
       <section id="dashboard" class="tab-content">
-        <h2 class="h5 mb-4 text-white">پیشخوان</h2>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+          <div>
+            <h2 class="h5 mb-1 text-white">داشبورد مالی</h2>
+            <p class="text-white-50 small mb-0">فایل وضعیت مالی خود را آپلود کنید و خروجی پیش‌بینی‌شده را ببینید.</p>
+          </div>
+          <span class="status-chip">
+            <i class="bi bi-hdd-network"></i>
+            در حال خدمت‌رسانی
+          </span>
+        </div>
         <div class="row g-3">
           <div class="col-12 col-sm-4">
             <div class="glass p-4 text-center rounded">
-              <h3 class="text-indigo fw-bold" id="totalMessages">0</h3>
-              <p class="text-white-50 small">پیام‌های ارسالی</p>
+              <h3 class="fw-bold text-white" id="totalMessages">0</h3>
+              <p class="text-white-50 small mb-0">پیام‌های ردوبدل‌شده با دستیار</p>
             </div>
           </div>
           <div class="col-12 col-sm-4">
             <div class="glass p-4 text-center rounded">
-              <h3 class="text-purple fw-bold" id="totalFiles">0</h3>
-              <p class="text-white-50 small">فایل‌های آپلود شده</p>
+              <h3 class="fw-bold text-white" id="totalFiles">0</h3>
+              <p class="text-white-50 small mb-0">فایل‌های مالی آپلود شده</p>
             </div>
           </div>
           <div class="col-12 col-sm-4">
             <div class="glass p-4 text-center rounded">
-              <h3 class="text-warning fw-bold" id="totalCharts">0</h3>
-              <p class="text-white-50 small">نمودارهای تولید شده</p>
+              <h3 class="fw-bold text-white" id="totalCharts">0</h3>
+              <p class="text-white-50 small mb-0">گزارش‌ها و نمودارها</p>
             </div>
+          </div>
+        </div>
+        <div class="row g-3 mt-1">
+          <div class="col-12 col-lg-7">
+            <div class="glass p-4 rounded h-100">
+              <h3 class="h6 text-white mb-3">بارگذاری فایل وضعیت مالی</h3>
+              <p class="text-white-50 small mb-4">
+                فایل می‌تواند مربوط به شرکت، فرد یا هر داده مالی دیگری باشد. پس از آپلود، سیستم آن را بررسی و تحلیل می‌کند.
+              </p>
+              <div class="text-center text-lg-start">
+                <input type="file" id="fileUpload" accept=".csv,.xlsx,.xls" class="d-none">
+                <label for="fileUpload" class="btn btn-outline-light">
+                  <i class="bi bi-upload"></i>
+                  آپلود فایل مالی
+                </label>
+                <p class="text-white-50 small mt-2 mb-0">فرمت‌های مجاز: CSV، XLSX، XLS — حجم پیشنهاد‌شده کمتر از 5 مگابایت</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-lg-5">
+            <div class="glass p-4 rounded h-100">
+              <h3 class="h6 text-white mb-3">مراحل بعد از آپلود</h3>
+              <ul class="step-list">
+                <li>
+                  <span>1</span>
+                  <div>
+                    <strong class="d-block text-white">بررسی داده</strong>
+                    <small class="text-white-50">ساختار فایل بررسی و پارامترهای مالی استخراج می‌شود.</small>
+                  </div>
+                </li>
+                <li>
+                  <span>2</span>
+                  <div>
+                    <strong class="d-block text-white">تحلیل و پیش‌بینی</strong>
+                    <small class="text-white-50">مدل هوش مصنوعی روندها را تحلیل و آینده را پیش‌بینی می‌کند.</small>
+                  </div>
+                </li>
+                <li>
+                  <span>3</span>
+                  <div>
+                    <strong class="d-block text-white">ارائه نتیجه</strong>
+                    <small class="text-white-50">خروجی به شکل گزارش متنی یا نمودار تعاملی نمایش داده می‌شود.</small>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="glass p-4 mt-4 rounded">
+          <h3 class="h6 mb-2 text-white">خروجی‌های قابل ارائه</h3>
+          <p class="text-white-50 small mb-3">نتیجه تحلیل می‌تواند در قالب گزارش، نمودار خطی یا توصیه‌های متنی نمایش داده شود.</p>
+          <div class="d-flex flex-wrap gap-2">
+            <span class="status-chip"><i class="bi bi-file-earmark-bar-graph"></i> گزارش عددی</span>
+            <span class="status-chip"><i class="bi bi-activity"></i> نمودار پیش‌بینی</span>
+            <span class="status-chip"><i class="bi bi-stars"></i> توصیه‌های هوشمند</span>
           </div>
         </div>
         <div class="glass p-4 mt-4 rounded">
@@ -174,28 +320,42 @@
         </div>
       </section>
 
-      <!-- Chat -->
-      <section id="chat" class="tab-content d-none d-flex flex-column" style="min-height: 500px;">
+      <!-- Assistant -->
+      <section id="assistant" class="tab-content d-none d-flex flex-column" style="min-height: 500px;">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+          <div>
+            <h2 class="h5 mb-1 text-white">دستیار هوش مصنوعی</h2>
+            <p class="text-white-50 small mb-0">گپ بزنید، سوال بپرسید و گزارش‌های تحلیلی دریافت کنید.</p>
+          </div>
+          <span class="status-chip">
+            <i class="bi bi-broadcast"></i>
+            آنلاین
+          </span>
+        </div>
         <div id="chatContainer" class="flex-grow-1 overflow-auto p-3 glass mb-3 rounded"></div>
-        <div class="d-flex gap-2 mb-3">
+        <div class="d-flex gap-2 mb-2">
           <input id="messageInput" type="text" class="form-control form-control-sm" placeholder="پیام خود را بنویسید...">
           <button id="sendBtn" class="btn btn-primary btn-sm">
             <i class="bi bi-send"></i>
           </button>
         </div>
-        <div class="text-center">
-          <input type="file" id="fileUpload" accept=".csv,.xlsx,.xls" class="d-none">
-          <label for="fileUpload" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-file-earmark-spreadsheet"></i> آپلود فایل
-          </label>
-        </div>
-        <div id="errorMessage" class="text-danger small mt-2 text-center d-none"></div>
-        <div id="loading" class="text-white-50 small mt-2 text-center d-none">در حال بارگذاری...</div>
+        <p class="text-white-50 small mb-2">نتایج آپلودها و نمودارها نیز در این بخش نمایش داده می‌شوند.</p>
+        <div id="errorMessage" class="text-danger small text-center d-none"></div>
+        <div id="loading" class="text-white-50 small text-center d-none">در حال بارگذاری...</div>
       </section>
 
       <!-- Profile -->
       <section id="profile" class="tab-content d-none">
-        <h2 class="h5 mb-4 text-white">پروفایل کاربری</h2>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+          <div>
+            <h2 class="h5 mb-1 text-white">پروفایل کاربری</h2>
+            <p class="text-white-50 small mb-0">مشخصات خود را مشاهده یا ویرایش کنید تا تجربه شخصی‌سازی‌شده‌تری داشته باشید.</p>
+          </div>
+          <span class="status-chip">
+            <i class="bi bi-person-badge"></i>
+            اطلاعات شما امن است
+          </span>
+        </div>
         <form id="profileForm" class="glass p-4 rounded">
           <div class="mb-3">
             <label class="form-label small text-white">نام کاربری</label>
@@ -211,6 +371,82 @@
           </div>
           <button type="submit" class="btn btn-primary w-100">ذخیره تغییرات</button>
         </form>
+      </section>
+
+      <!-- Services -->
+      <section id="services" class="tab-content d-none">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+          <div>
+            <h2 class="h5 mb-1 text-white">سرویس‌ها</h2>
+            <p class="text-white-50 small mb-0">بخش سرویس‌ها فعال است اما هنوز سرویسی تعریف نشده است.</p>
+          </div>
+          <span class="status-chip">
+            <i class="bi bi-hourglass-split"></i>
+            فعال - خالی
+          </span>
+        </div>
+        <div class="glass p-5 text-center rounded">
+          <i class="bi bi-grid text-white-50 display-6 d-block mb-3"></i>
+          <p class="text-white-50 mb-0">به‌زودی سرویس‌های پردازش مالی و اتصال به سیستم‌های خارجی از اینجا قابل دسترس خواهند بود.</p>
+        </div>
+      </section>
+
+      <!-- Economic -->
+      <section id="economic" class="tab-content d-none">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+          <div>
+            <h2 class="h5 mb-1 text-white">اقتصادی</h2>
+            <p class="text-white-50 small mb-0">این ماژول نیز فعال است اما هنوز داده‌ای در آن بارگذاری نشده.</p>
+          </div>
+          <span class="status-chip">
+            <i class="bi bi-clipboard-data"></i>
+            فعال - در انتظار داده
+          </span>
+        </div>
+        <div class="glass p-5 text-center rounded">
+          <i class="bi bi-graph-up text-white-50 display-6 d-block mb-3"></i>
+          <p class="text-white-50 mb-0">وقتی داده‌های کلان یا شاخص‌های اقتصادی در دسترس قرار بگیرند، تحلیلی جامع در این بخش نمایش داده خواهد شد.</p>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section id="settings" class="tab-content d-none">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+          <div>
+            <h2 class="h5 mb-1 text-white">تنظیمات سامانه</h2>
+            <p class="text-white-50 small mb-0">تم موردنظر را انتخاب کنید و در صورت نیاز از حساب خود خارج شوید.</p>
+          </div>
+          <span class="status-chip">
+            <i class="bi bi-tools"></i>
+            شخصی‌سازی
+          </span>
+        </div>
+        <div class="glass p-4 rounded mb-3">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+              <h3 class="h6 text-white mb-1">انتخاب تم روشن/تیره</h3>
+              <p class="text-white-50 small mb-0">تم سفید یا سیاه را بر اساس محیط کاری خود برگزینید.</p>
+            </div>
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="darkModeSwitch">
+              <label class="form-check-label text-white small" for="darkModeSwitch">
+                <i class="bi bi-moon-stars-fill"></i>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="glass p-4 rounded">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+              <h3 class="h6 text-white mb-1">خروج از حساب کاربری</h3>
+              <p class="text-white-50 small mb-0">برای حفظ امنیت، پس از پایان کار از حساب خود خارج شوید.</p>
+            </div>
+            <button class="btn btn-danger" id="logoutBtn">
+              <i class="bi bi-box-arrow-right"></i>
+              خروج
+            </button>
+          </div>
+        </div>
       </section>
 
     </main>
