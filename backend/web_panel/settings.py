@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'profile_panel',
     'rest_framework_simplejwt',
     'chat.apps.ChatConfig',
-    'corsheaders'
+    'corsheaders',
+    'economic'
 ]
 
 MIDDLEWARE = [
